@@ -170,8 +170,8 @@ class Settings:
         self.ongoing_rows = 4
         self.paused_rows = 12
         self.session = False
-        # ------------- dynamic non editable
         self.last_save = 0
+        # ------------- dynamic non editable
         self.windows = platform.system() != 'Darwin'
         self.space = 26 if self.windows else 28
         self.font_size = 12 if self.windows else 16
@@ -278,7 +278,7 @@ class Settings:
             self.ongoing_rows = int(load[4][1])
             self.paused_rows = int(load[5][1])
             self.last_save = int(load[6][1])
-            self.font_size = int(load[7][1])
+            # self.font_size = int(load[7][1]) This was a stupid option to change, should be based on platform
             self.session = load[8][1] == "True"  # == False so that if file is corrupt it returns False
 
             colours = [self.bg_colour, self.bg2_colour, self.fg_colour]

@@ -6,3 +6,9 @@ replacement/worktimes/data.txt
 replacement/worktimes/icon.ico
 replacement/worktimes/info.txt
 replacement/worktimes/settings.rfe
+setup.py
+tcl86t.dll
+tcl86t.lib
+tk86t.dll
+tk86t.lib
+vcruntime140.dll
