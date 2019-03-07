@@ -1,0 +1,157 @@
+#--------------------------------------#
+#                                      #
+#              Work Times              #
+#         By Kjell Isak Nyberg         #
+#                                      #
+#            isak@nyberg.dev           #
+#            4 February 2019           #
+#--------------------------------------#
+
+			***
+update from February 2019 is a
+major overhaul and some functions from
+the previous versions may not yet be
+implemented in this version.
+			***
+Information:
+Work Times is an application aimed to
+enable people to keep track on much 
+time the user spends on certain tasks
+such as homework and job assignments. 
+The Program is written in python 3.6
+using the modules: tkinter, os, time
+and platform, and datetime. It has been
+compiled for windows (32 & 64).
+
+Key:	*** removed ***
+In order to add more than 5 tasks, a key
+needs to be used. This is done by adding
+the key as a new task and it will sort
+itself out. 
+----------------------------------------
+
+Usage:
+             #-------------#
+             #[s] [][][] []#
+             #Task:[___] []#
+             #-------------#
+             #   ongoing   #
+             #    tasks    #
+             #-------------#
+             #             #
+             #    paused   #
+             #    tasks    #
+             #-------------#
+Adding a task:
+To add a task a name needs to be typed
+into the "New Task" field. Thereafter
+the buttons "Add" needs to be pressed
+and the task will appear in the "Paused"
+area.
+		*** Note! *** 
+A task name CANNOT contain the
+characters "_" (underscore) and "#" 
+(pound sign). This will cause the save
+file to become partially unreadable and
+weird things may happen.
+
+Save:
+The save button will save the task to a
+local file so that it can be accessed 
+next time the app is launched. All tasks
+are saved locally in plaintext and only
+a person with access this computer will
+be see them.
+  
+Start and stop:
+To start a task it needs to be selected
+from the "paused" field thereafter press
+the "Start | Stop" button. Then the task
+will move to the "Ongoing" field.
+To stop a task do the same procedure
+ 
+Sort
+All tasks can be sorted alphabetically
+by pressing the "Sort ABC" button or
+sorted by the amount of time that has
+been spent on each task by pressing the
+"Sort Time" button.
+
+Settings:  *** work in progress ***
+Pressing the gear icon will open the
+settings window.
+
+----------------------------------------
+
+settings:
+The settings can be accessed by typing
+"settings" into the "New Task" field
+and then pressing "Add."
+ 
+             #-------------#
+             # Save        #
+             #[_____][____]#
+             # A & U       #
+             #[_____][____]#
+             #[_____][____]#
+             #[_____]      #
+             # I S R       #
+             #[_____][____]#
+             #[_____]      #
+             #-------------#
+
+Clear all tasks:
+This removes all tasks that have been
+created.
+
+Remove selected task:
+This removes the selected task, tasks
+that are ongoing cannot be removed.
+
+Change text and app colour:
+The colour can be changed by entering an
+RGB code in the form of (R,G,B) for 
+example (125,200,0) and then pressing 
+the respective change colour buttons.
+(Restarting the app is required for a
+full effect).
+example colour schemes:
+	#------------------------#
+	#Red:     (255,255,255)  #
+	#         (200,0,0)      #
+	#         (170,0,0)      #
+	#                        #
+	#Green:   (111,15,100)   #
+	#         (144,238,144)  #
+	#         (125,205,115)  #
+	#                        #
+	#Dark:    (255,255,255)  #
+	#         (0,0,0)        #
+	#         (60,60,60)     #
+	#                        #
+	#Default: (255,255,255)  #
+	#         (0,127,194)    #
+	#         (0,108,178)    #
+	#------------------------#
+
+Task rows:
+The number of rows dedicated to 
+displaying the tasks for both the 
+ongoing and paused tasks.
+default is 5 and 20 respectively.
+
+Turning on/off warning dialogs:
+This will prevent most popup windows in
+order to prevent annoyance. Some windows
+will remain such as the one asking if
+you want to save when you close the app.
+ 
+Save and restore:
+These save the settings and restores the
+default settings respectively.
+
+#--------------------------------------#
+#              Good Luck               #
+#                                      #
+#   I hope you find the app useful     #     
+#--------------------------------------#
