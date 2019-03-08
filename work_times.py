@@ -1,53 +1,9 @@
+# -------------------------------------------------------------------------------------------------------------- imports
 import os
 import time
 import platform
 from tkinter import *
 from tkinter import messagebox
-from tkinter import font
-from datetime import datetime, timedelta
-
-
-# ----------------------------------------------------------------------------------------------------- Global functions
-def save(save_list):
-    """
-    This saves the TaskList into the data.txt file in the fromat
-    taskname_session_totaltime
-    TaskList:param save_list:
-    None:return: void
-    """
-    open(settings.path_data, 'w').close()  # delete old file
-    write = ""
-    for task in save_list.get_list():  # makes one massive string following the save format
-        write += task.get_name() + "_" + str(task.get_total()) + "_" + str(task.get_session()) + "\n"
-    with open(settings.path_data, "a") as saveFile:  # recreate new file
-        saveFile.write(write)  # puts massive string in file
-    settings.last_save = time.time()
-
-def ask_save():
-    """should i save?"""
-    if app0.is_saved():
-        root0.destroy()
-        return
-    question = messagebox.askyesnocancel("Save", "Do you want to save before you exit?")
-    if question is True:
-        save(app0.worktasks)
-        root0.destroy()
-        return
-    if question is False:
-        root0.destroy()
-        return
-
-def format_time(time):  # formats seconds to 33h 33m format
-    days = str(int(time / 86400))
-    hours = str(int((time % 86400) / 3600))
-    minutes = str(int((time % 3600) / 60))
-    if time >= 3600:
-        if time >= 86400:
-            return days + "D " + hours + "H " + minutes + "M"
-        else:
-            return hours + "H " + minutes + "M"
-    else:
-        return minutes + "M"
 
 
 # ------------------------------------------------------------------------------------------------------ Task List Class
@@ -55,55 +11,103 @@ class TaskList:
     def __init__(self):
         self.allTasks = []
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.allTasks)
 
-    def __repr__(self):
-        return string(self.allTasks)
+    def __repr__(self) -> str:
+        return str(self.allTasks)
 
     def get_list(self):
         return self.allTasks
 
-    def append_task(self, task):
+    def append_task(self, task) -> None:
         self.allTasks.append(task)
 
-    def remove_task(self, task):
+    def remove_task(self, task) -> None:
         self.allTasks.remove(task)
 
-    def sort_alphabetically(self, reverse):
+    def sort_alphabetically(self, reverse: bool):
+        """
+        sorts TaskList alphabetically a-z or z-a
+        :param reverse: boolean whether a-z or z-a
+        :return: None
+        """
         self.allTasks.sort(key=lambda task: task.get_name(), reverse=reverse)
 
     def sort_time(self, reverse):
+        """
+        sorts TaskList by the recorded time ascending or descending
+        :param reverse: boolean whether ascending or descending
+        :return:
+        """
         self.allTasks.sort(key=lambda task: task.get_total(), reverse=reverse)
+        if settings.session:
+            self.allTasks.sort(key=lambda task: task.get_session(), reverse=reverse)
 
-    def is_ongoing(self):
+    def is_ongoing(self) -> bool:
+        """
+        :return: boolean if there is at least 1 task that is ongoing.
+        """
         return any(task.is_ongoing() for task in self.allTasks)
 
-    def in_task_list(self, task_name):
+    def in_task_list(self, task_name) -> bool:
+        """
+        works the same as in for lists
+        :param task_name: String, name of a task
+        :return: boolean whether there is a task with that name in the TaskList
+        """
         return any(task.get_name() == task_name for task in self.allTasks)
 
-    def get_task(self, task_name):  # Returns Task object with name == task_name
+    def get_task(self, task_name):
+        """
+        Returns Task object with name == task_name
+        :param task_name: str name of task
+        :return: Task with the name task_name
+        """
         for task in self.allTasks:
             if task.get_name() == task_name:
                 return task
         return None
 
     def get_total(self):
+        """
+        gets sum of the total time of all tasks
+        :return: int total time
+        """
         return sum([task.get_total for task in self.allTasks])
 
     def new_session(self):
+        """
+        Sets the session time of all tasks to 0 Does NOT update the app0
+        :return: None
+        """
         for task in self.allTasks:
             task.new_session()
+
+    def save(self):
+        """
+        This saves the TaskList into the data.txt file in the format:
+        name_session_total
+        :return: None
+        """
+        open(settings.path_data, 'w').close()  # delete old file
+        write = ""
+        for task in self.get_list():  # makes one massive string following the save format
+            write += task.get_name() + "_" + str(task.get_total()) + "_" + str(task.get_session()) + "\n"
+        with open(settings.path_data, "a") as saveFile:  # recreate new file
+            saveFile.write(write)  # puts massive string in file
+        settings.last_save = time.time()
 
 
 # ----------------------------------------------------------------------------------------------------------- Task class
 class Task:
     def __init__(self, name, total=0, session=0):
+
         self.name = name
         self.total = total
         self.session = session
         self.ongoing = False
-        self.start = 0
+        self.start = 0  # the time.time() when a task is started
 
     def __repr__(self):
         return str(self.name)
@@ -111,20 +115,20 @@ class Task:
     def get_name(self):
         return self.name
 
-    def set_name(self, name):
-        self.name = name
-
     def get_total(self):
         return self.total
 
     def get_session(self):
         return self.session
 
-    def set_total(self, total):
-        self.total = int(total)
-
     def get_start(self):
         return self.start
+
+    def set_name(self, name: str):
+        self.name = name
+
+    def set_total(self, total: int):
+        self.total = int(total)
 
     def is_ongoing(self):
         return self.ongoing
@@ -133,49 +137,75 @@ class Task:
         self.session = 0
 
     def start_task(self):
+        """Records the start time of a task in self.start"""
         self.start = int(time.time())
         self.ongoing = True
 
     def stop_task(self):
+        """Adds the spent time of an ongoing task to total and session"""
         self.total += int(time.time() - self.start)
         self.session += int(time.time() - self.start)
         self.ongoing = False
         self.start = 0
 
     def displaytext(self):
-        """Returns string in format for  the listbox in app0"""
-        space = settings.space
-        divide_character = settings.divide_character
-        if self.is_ongoing():
+        """
+        Returns string in format for the listbox in app0 using magic
+        :return: str in format name + '   ' + time
+        """
+        space = settings.space  # the number of spaces in a row in app0
+        divide_character = settings.divide_character  # this is the empty character between the task name and the time
+        if self.is_ongoing():  # makes sure the self.total is accurate
             self.stop_task()
             self.start_task()
-        time = format_time(self.total)
+        time_seconds = self.format_time(self.total)
         if settings.session:
-            time = format_time(self.session)
-        if (len(self.name) + len(time)) >= space:
+            time_seconds = self.format_time(self.session)
+        if (len(self.name) + len(time_seconds)) >= space:  # if the string is too long, only one space is used
             divide = divide_character
         else:
-            divide = divide_character * (space - (len(self.name) + len(time)))
-        return self.name + divide + time
+            # subtracts the length of the string from the number of spaces
+            divide = divide_character * (space - (len(self.name) + len(time_seconds)))
+        return self.name + divide + time_seconds
+
+    @staticmethod
+    def format_time(time_seconds):
+        """
+        formats seconds to XXh XXm format
+        :param time_seconds: int time in seconds
+        :return: str in the XXh XXm format
+        """
+        days = str(int(time_seconds / 86400))
+        hours = str(int((time_seconds % 86400) / 3600))
+        minutes = str(int((time_seconds % 3600) / 60))
+        if time_seconds >= 3600:
+            if time_seconds >= 86400:
+                return days + "D " + hours + "H " + minutes + "M"
+            else:
+                return hours + "H " + minutes + "M"
+        else:
+            return minutes + "M"
 
 
 # ------------------------------------------------------------------------------------------------------- Settings class
 class Settings:
+
     def __init__(self):
-        # ------------- editable
-        self.bg_colour = (0, 127, 194)  # Editable stored as hex decimal
-        self.bg2_colour = (0, 108, 178)  # Editable stored as hex decimal
-        self.fg_colour = (255, 255, 255)  # Editable stored as hex decimal
+        """Initialises all settings variables and paths"""
+        # ------------- editable in app1
+        self.bg_colour = '#007fc2'  # hexadecimal
+        self.bg2_colour = '#006cb2'
+        self.fg_colour = '#ffffff'
         self.show_error_messages = True
         self.ongoing_rows = 4
         self.paused_rows = 12
         self.session = False
         self.last_save = 0
         # ------------- dynamic non editable
-        self.windows = platform.system() != 'Darwin'
+        self.windows = platform.system() == 'win32'
         self.space = 26 if self.windows else 28
         self.font_size = 12 if self.windows else 16
-        self.settings_load_error = False
+        self.settings_load_error = False  # if True it triggers a popup box when app0 is launched
         # ------------- Static non editable
         self.info = []
         self.path_data = ""
@@ -183,79 +213,102 @@ class Settings:
         self.path_info = ""
         self.path_icon = ""
         # ------------- init methods
-        self.fix_colour()
         self.set_filepaths()
         self.load_info()
         self.load_settings()
         # ------------- hard-coded non editable
-        self.divide_character = u"\u00A0"  # setting '·'   MAC:' '   '-'   '—'   '…'   '_' win:u"\u00A0"
+        self.divide_character = u"\u00A0"  # other options: '·'   MAC:' '   '-'   '—'   '…'   '_' win:u"\u00A0"
         self.app_font = ('Courier New', self.font_size)
 
     def __repr__(self):
+        """Prints all settings"""
         string_settings = self.to_string().split('\n')
         names = [attr for attr in vars(self) if not attr.startswith('__')]
         return str(string_settings[index] + ' : ' + names[index] for index in range(len(string_settings)))
 
-    def set_bg(self, colour):
+    def set_bg(self, colour: str):
+        """
+        Sets the primary background colour of the app
+        :param colour: str hexadecimal
+        :return: None
+        """
         self.bg_colour = colour
-        self.fix_colour()
 
-    def set_bg2(self, colour):
+    def set_bg2(self, colour: str):
+        """
+        Sets the secondary background colour of the app
+        :param colour: str hexadecimal
+        :return: None
+        """
         self.bg2_colour = colour
-        self.fix_colour()
 
-    def change_fg(self, colour):
+    def change_fg(self, colour: str):
+        """
+        Sets the foreground (text) colour of the app
+        :param colour: str hexadecimal
+        :return: None
+        """
         self.fg_colour = colour
-        self.fix_colour()
 
-    def fix_colour(self):
-        self.bg_colour = '#%02x%02x%02x' % self.bg_colour
-        self.bg2_colour = '#%02x%02x%02x' % self.bg2_colour
-        self.fg_colour = '#%02x%02x%02x' % self.fg_colour
-
-    def set_ongoing(self, rows):
+    def set_ongoing(self, rows: int):
+        """
+        Sets the number of rows in the 'ongoing' listbox in app0
+        :param rows: int number of rows
+        :return: None
+        """
         self.ongoing_rows = rows
 
-    def set_paused(self, rows):
+    def set_paused(self, rows: int):
+        """
+        Sets the number of rows in the 'paused' listbox in app0
+        :param rows: int number of rows
+        :return: None
+        """
         self.paused_rows = rows
 
     def to_string(self):
+        """ 
+        :return: str of all the settings
+        """""
         return ('bg-colour_' + str(self.bg_colour) + '\nbg2-colour_' + str(self.bg2_colour) + '\nfg-colour_' +
                 str(self.fg_colour) + '\nshow-error-messages_' + str(self.show_error_messages) + '\nongoing-rows_' +
                 str(self.ongoing_rows) + '\npaused-rows_' + str(self.paused_rows) + '\nlast-save_' +
                 str(self.last_save) + '\nfont-size_' + str(self.font_size) + '\nsession_' + str(self.session))
 
     def default_settings(self):
-        self.bg_colour = (0, 127, 194)
-        self.bg2_colour = (0, 108, 178)
-        self.fg_colour = (255, 255, 255)
+        """
+        Sets the settings back to default, however does not update their values in app0
+        :return: None
+        """
+        self.bg_colour = '#007fc2'  # hexadecimal
+        self.bg2_colour = '#006cb2'
+        self.fg_colour = '#ffffff'
         self.show_error_messages = True
         self.session = False
         self.ongoing_rows = 4
         self.paused_rows = 12
         self.last_save = 0
-        self.windows = platform.system() != 'Darwin'
+        self.windows = platform.system() == 'win32'
         self.space = 26 if self.windows else 26
         self.font_size = 12 if self.windows else 16
         self.divide_character = u"\u00A0"  # setting '·'   MAC:' '   '-'   '—'   '…'   '_' win:u"\u00A0"
         self.app_font = ('Courier New', self.font_size)
-        self.fix_colour()
 
     def set_filepaths(self):
         if getattr(sys, 'frozen', False):  # frozen
             dir_ = os.path.dirname(sys.executable)
         else:  # unfrozen
             dir_ = os.path.dirname(os.path.realpath(__file__))
-        if platform.system() == 'Darwin':  # windows or mac
-            self.path_data = os.path.join(os.path.dirname(dir_), "worktimes/data.txt")
-            self.path_settings = os.path.join(os.path.dirname(dir_), "worktimes/settings.rfe")
-            self.path_info = os.path.join(os.path.dirname(dir_), "worktimes/info.txt")
-            self.path_icon = os.path.join(os.path.dirname(dir_), "worktimes/icon.ico")
-        else:
+        if self.windows:  # windows or mac
             self.path_data = os.path.join(os.path.dirname(dir_), "worktimes\\data.txt")
             self.path_settings = os.path.join(os.path.dirname(dir_), "worktimes\\settings.rfe")
             self.path_info = os.path.join(os.path.dirname(dir_), "worktimes\\info.txt")
             self.path_icon = os.path.join(os.path.dirname(dir_), "worktimes\\icon.ico")
+        else:
+            self.path_data = os.path.join(os.path.dirname(dir_), "worktimes/data.txt")
+            self.path_settings = os.path.join(os.path.dirname(dir_), "worktimes/settings.rfe")
+            self.path_info = os.path.join(os.path.dirname(dir_), "worktimes/info.txt")
+            self.path_icon = os.path.join(os.path.dirname(dir_), "worktimes/icon.ico")
 
     def load_info(self):
         try:
@@ -283,10 +336,9 @@ class Settings:
 
             colours = [self.bg_colour, self.bg2_colour, self.fg_colour]
             if any((len(colour) != 7 or colour[0] != '#') for colour in colours):
-                raise Exception('Colour error')  # checking if all colours are hexadeimal #ff0011
+                raise Exception('Colour error')  # checking if all colours are hexadecimal #ff0011
 
         except (FileNotFoundError, UnicodeDecodeError, ValueError):
-            print("Failed to import settings")
             self.default_settings()
             self.settings_load_error = True
 
@@ -297,20 +349,21 @@ class Settings:
             settings_save_file.write(write)
 
 
-# -------------------------------------------------------------------------------------------------------- Worktimes app
+# ------------------------------------------------------------------------------------------------------- Work Times app
 class App0:
     def __init__(self, master):
         self.sorted = 'random'
         self.saved = True
         self.worktasks = TaskList()
+
         fg = settings.fg_colour
         bg = settings.bg_colour
-        bg2 = settings.bg2_colour  # not used but may be at some point
         app_font = settings.app_font
         ongoing_rows = settings.ongoing_rows
         paused_rows = settings.paused_rows
+        '''bg2 = settings.bg2_colour  # not used but may be at some point
         divide_character = settings.divide_character  # not used but may be at some point
-        session = settings.session  # to do
+        session = settings.session  # to do'''
 
         self.master = master
         self.frame = Frame(master)
@@ -319,47 +372,47 @@ class App0:
         self.master.title('Work Times')
         self.master.tk_setPalette(background=bg, fg=fg)
 
-        App0.saveButton = Button(self.frame, text="Save", command=self.save, bg=fg, fg=bg)
-        App0.saveButton.grid(row=0, column=0)
-        App0.sortabcButton = Button(self.frame, text="Sort Abc", command=self.sort_abc, bg=fg, fg=bg)
-        App0.sortabcButton.grid(row=0, column=1)
-        App0.sorttimeButton = Button(self.frame, text="Sort Time", command=self.sort_time, bg=fg, fg=bg)
-        App0.sorttimeButton.grid(row=0, column=2)
-        App0.startstopButton = Button(self.frame, text="Start|Stop", command=self.start_stop, bg=fg, fg=bg)
-        App0.startstopButton.grid(row=0, column=3)
-        App0.refreshButton = Button(self.frame, text="⚙", command=self.open_settings, bg=fg, fg=bg)
-        App0.refreshButton.grid(row=0, column=5)
-        App0.addButton = Button(self.frame, text="Add", command=self.add, bg=fg, fg=bg)
-        App0.addButton.grid(row=1, column=5)
-        App0.label = Label(self.frame, text="New Task:", bg=bg, fg=fg)
-        App0.label.grid(row=1, column=0)
-        App0.entry = Entry(self.frame)
-        App0.entry.grid(row=1, column=1, columnspan=4, sticky=E + W)
+        self.save_button = Button(self.frame, text="Save", command=self.save, bg=fg, fg=bg)
+        self.save_button.grid(row=0, column=0)
+        self.sort_abc_button = Button(self.frame, text="Sort Abc", command=self.sort_abc, bg=fg, fg=bg)
+        self.sort_abc_button.grid(row=0, column=1)
+        self.sort_time_button = Button(self.frame, text="Sort Time", command=self.sort_time, bg=fg, fg=bg)
+        self.sort_time_button.grid(row=0, column=2)
+        self.start_stop_button = Button(self.frame, text="Start|Stop", command=self.start_stop, bg=fg, fg=bg)
+        self.start_stop_button.grid(row=0, column=3)
+        self.refresh_button = Button(self.frame, text="⚙", command=self.open_settings, bg=fg, fg=bg)
+        self.refresh_button.grid(row=0, column=5)
+        self.add_button = Button(self.frame, text="Add", command=self.add, bg=fg, fg=bg)
+        self.add_button.grid(row=1, column=5)
+        self.entry_label = Label(self.frame, text="New Task:", bg=bg, fg=fg)
+        self.entry_label.grid(row=1, column=0)
+        self.entry = Entry(self.frame)
+        self.entry.grid(row=1, column=1, columnspan=4, sticky=E + W)
 
-        App0.ongoingFrame = LabelFrame(self.frame, text="Ongoing", bg=bg, fg=fg)
-        App0.ongoingFrame.grid(columnspan=6, sticky=E + W + S + N)
-        App0.ongoingFrame.columnconfigure(0, weight=1)
-        App0.ongoing = Listbox(App0.ongoingFrame, bg=bg, fg=fg, height=ongoing_rows, font=app_font)
-        App0.ongoing.grid(sticky=E + W + S + N)
+        self.ongoing_frame = LabelFrame(self.frame, text="Ongoing", bg=bg, fg=fg)
+        self.ongoing_frame.grid(columnspan=6, sticky=E + W + S + N)
+        self.ongoing_frame.columnconfigure(0, weight=1)
+        self.ongoing = Listbox(self.ongoing_frame, bg=bg, fg=fg, height=ongoing_rows, font=app_font)
+        self.ongoing.grid(sticky=E + W + S + N)
 
-        App0.pausedFrame = LabelFrame(self.frame, text="Paused", bg=bg, fg=fg)
-        App0.pausedFrame.grid(columnspan=6, sticky=E + W + S + N)
-        App0.pausedFrame.columnconfigure(0, weight=1)
-        App0.paused = Listbox(App0.pausedFrame, bg=bg, fg=fg, height=paused_rows, font=app_font)
-        App0.paused.grid(sticky=E + W + S + N)
+        self.paused_frame = LabelFrame(self.frame, text="Paused", bg=bg, fg=fg)
+        self.paused_frame.grid(columnspan=6, sticky=E + W + S + N)
+        self.paused_frame.columnconfigure(0, weight=1)
+        self.paused = Listbox(self.paused_frame, bg=bg, fg=fg, height=paused_rows, font=app_font)
+        self.paused.grid(sticky=E + W + S + N)
 
-        self.front = [self.saveButton, self.sortabcButton, self.startstopButton, self.sorttimeButton,
-                      self.refreshButton, self.addButton]
-        self.back = [self.entry, self.ongoing, self.paused, self.ongoingFrame, self.pausedFrame, self.label]
+        self.front = [self.save_button, self.sort_abc_button, self.start_stop_button, self.sort_time_button,
+                      self.refresh_button, self.add_button]
+        self.back = [self.entry, self.ongoing, self.paused, self.ongoing_frame, self.paused_frame, self.entry_label]
 
         # ------------------------------------------------------------------------------------ Failed to import settings
         if settings.settings_load_error:
-            root0.update()
+            self.master.update()
             messagebox.showerror("Settings file corrupt",
                                  "The settings file could not be read due to unexpected character or format\n"
                                  "The default settings will be used.\n"
                                  "If this error is persistent please restore to default under in the settings window",
-                                 parent=root0)
+                                 parent=self.master)
 
         # ------------------------------------------------------------------------------------------------- Import Tasks
         try:
@@ -373,19 +426,18 @@ class App0:
                         self.worktasks.append_task(Task(split_line[0], int(split_line[1]), 0))
 
         except FileNotFoundError:
-            print(FileNotFoundError)
 
             create_new_savefile = messagebox.askyesno("Save not found",
                                                       "The data file was not found, do you wish to make a new one?\n"
                                                       "This will cause any previous data to be lost",
-                                                      parent=None)
+                                                      parent=self.master)
             if create_new_savefile:
-                save(self.worktasks)
+                self.worktasks.save()
             else:
                 messagebox.showerror("Please review save file",
                                      "Please review the data.txt in order to prevent data loss.\n"
                                      "Program will exit.",
-                                     parent=None)
+                                     parent=self.master)
             quit()
 
         except:  # when fails to load tasks, program closes in order to make sure that the previous data isn't lost.
@@ -393,40 +445,33 @@ class App0:
                                                       "Could not read save file due to unexpected character "
                                                       "or formatting.\n" +
                                                       "do you wish to make a new one?\n"
-                                                      "This will cause any previous data to be lost",
-                                                      parent=None)
+                                                      "This will cause all previous data to be lost")
             self.update()
             if create_new_savefile:
-                save(self.worktasks)
+                self.worktasks.save()
 
             else:
                 messagebox.showerror("Please review save file",
-                                     "Please review the data.txt in order to prevent data loss.\n"
-                                     "Program will exit.",
-                                     parent=None)
+                                     "Please review the data.txt file in order to prevent data loss.\n\n"
+                                     "Program will exit.")
             quit()
 
         self.clock()
 
         # -------------------------------------------------------------------------------------------- First time prompt
         if len(self.worktasks) + settings.last_save == 0:  # if no tasks and have never been saved generate greeting
-            root0.update()
+            self.master.update()
             new_user = messagebox.askyesno("Welcome!",
                                            "Thank you for using Work Times!\nIs this your first time using this App?",
-                                           parent=root0)
+                                           parent=self.master)
             if new_user:
-                root3 = Tk()
-                textbox = Text(root3, height=28, width=40)
-                textbox.pack()
-                for line in settings.info:
-                    textbox.insert(END, line + "\n")
-                root3.mainloop()
-            save(self.worktasks)
+                self.show_info()
+            self.worktasks.save()
 
     # --------------------------------------------------------------------------------------------- App0 class functions
     @staticmethod
     def to_task_name(selection):
-        """reformats listboxformat to only the taskname"""
+        """reformat ListBox format to only the taskname"""
         return selection.split(settings.divide_character)[0]
 
     def clock(self):
@@ -441,17 +486,17 @@ class App0:
         fg = settings.fg_colour
         self.paused.delete(0, END)  # empties both lists
         self.ongoing.delete(0, END)
-        pausedBG1, pausedBG2 = bg, bg2  # alternating colours and lines
-        ongoingBG1, ongoingBG2 = bg, bg2
+        paused_bg1, paused_bg2 = bg, bg2  # alternating colours and lines
+        ongoing_bg1, ongoing_bg2 = bg, bg2
         for task in self.worktasks.get_list():  # adds tasks back into lists
             if task.is_ongoing():
                 self.ongoing.insert(END, task.displaytext())
-                self.ongoing.itemconfig(END, {'bg': ongoingBG1})
-                ongoingBG1, ongoingBG2 = ongoingBG2, ongoingBG1
+                self.ongoing.itemconfig(END, {'bg': ongoing_bg1})
+                ongoing_bg1, ongoing_bg2 = ongoing_bg2, ongoing_bg1
             else:
                 self.paused.insert(END, task.displaytext())
-                self.paused.itemconfig(END, {'bg': pausedBG1})
-                pausedBG1, pausedBG2 = pausedBG2, pausedBG1
+                self.paused.itemconfig(END, {'bg': paused_bg1})
+                paused_bg1, paused_bg2 = paused_bg2, paused_bg1
 
         self.master.tk_setPalette(background=bg, fg=fg)
         for widget in self.front:
@@ -460,25 +505,40 @@ class App0:
 
     def open_settings(self):
         self.settings_window = Toplevel(self.master)
-        self.app = App1(self.settings_window)
+        self.app1 = App1(self.settings_window)
+        self.settings_window.protocol("WM_DELETE_WINDOW", self.app1.ask_save)
 
     def save(self):
         if self.worktasks.is_ongoing():
             if settings.show_error_messages:
-                messagebox.showerror("Save error", "Cannot save when one or more tasks are ongoing", parent=root0)
+                messagebox.showerror("Save error", "Cannot save when one or more tasks are ongoing", parent=self.master)
                 return
-        save(self.worktasks)
+        self.worktasks.save()
         self.saved = True
         self.update()
 
     def is_saved(self):
         """returns whether project is saved AND changes button colour"""
         if self.saved:
-            App0.saveButton.configure(bg=settings.fg_colour, fg=settings.bg_colour)
+            self.save_button.configure(bg=settings.fg_colour, fg=settings.bg_colour)
         else:
-            App0.saveButton.configure(bg="red", fg=settings.fg_colour)
+            self.save_button.configure(bg="red", fg=settings.fg_colour)
 
         return self.saved
+
+    def ask_save(self):
+        """should i save?"""
+        if self.is_saved():
+            root0.destroy()
+            return
+        question = messagebox.askyesnocancel("Save", "Do you want to save before you exit?")
+        if question is True:
+            self.worktasks.save()
+            self.master.destroy()
+            return
+        if question is False:
+            self.master.destroy()
+            return
 
     def sort_abc(self):
         self.worktasks.sort_alphabetically(self.sorted == "abc")
@@ -496,12 +556,12 @@ class App0:
             return
         if self.worktasks.in_task_list(task_name):
             messagebox.showerror("New Task error", "There is already a task with the name: \n '" + task_name + "'",
-                                 parent=root0)
+                                 parent=self.master)
             return
         if any(character in task_name for character in ["#", "_", "%", "&", "'", '"']):
             messagebox.showerror("New Task error",
                                  "Do not use any of the following characters in the task name:\n# _ % & ' " + '"',
-                                 parent=root0)
+                                 parent=self.master)
             return
 
         task = Task(task_name)  # Creates new task
@@ -520,7 +580,7 @@ class App0:
             if len(selection) == 0:  # if no task is selected in either box the it will notify user if open is on
                 if settings.show_error_messages:
                     messagebox.showerror("No task selected", "To start or stop a task it needs to be selected.",
-                                         parent=root0)
+                                         parent=self.master)
                 return self.is_saved()  # returns with no changes
 
             task_name = self.to_task_name(self.paused.get(selection[0]))  # gets taskname from listbox format
@@ -544,17 +604,21 @@ class App0:
         selection = self.paused.curselection()
         if len(selection) == 0:  # if no task is selected in either box the it will notify user if open is on
             if settings.show_error_messages:
-                messagebox.showerror("No task selected", "Only paused tasks can be removed.",
-                                     parent=root0)
+                messagebox.showerror("No task selected", "Only paused tasks can be removed.", parent=root0)
+                return
         task_name = self.to_task_name(self.paused.get(selection[0]))  # gets taskname from listbox format
         task = self.worktasks.get_task(task_name)  # gets task object from tasklist using taskname
         result = messagebox.askyesno("Remove task?", "Are you sure you want to remove:\n" + task_name +
-                                     "\nThis cannot be undone", icon="question")
+                                     "\n\nThis cannot be undone", icon="question")
         if result:
             self.worktasks.remove_task(task)
             self.paused.delete(selection[0])  # removes task from paused
             self.saved = False
             self.update()
+
+    def show_info(self):
+        self.info_window = Toplevel(self.master)
+        self.app2 = App2(self.info_window)
 
 
 # --------------------------------------------------------------------------------------------------------- Settings app
@@ -566,14 +630,15 @@ class App1:
         self.frame.grid()
         self.master.iconbitmap(settings.path_icon)
         self.master.title("Settings")
+        self.saved = True
         fg = settings.fg_colour
         bg = settings.bg_colour
-        bg2 = settings.bg2_colour  # not used but may be at some point
+        '''bg2 = settings.bg2_colour  # not used but may be at some point
         app_font = settings.app_font
         ongoing_rows = settings.ongoing_rows
         paused_rows = settings.paused_rows
-        divide_character = settings.divide_character  # not used but may be at some point
-        session = settings.session
+        divide_character = settings.divide_character  # not used but may be at some point'''
+        session = settings.session  # this is a static variable, it is not a mistake
         m = {True: "Turn off warning dialogs", False: "Turn on warning dialogs"}
         n = {True: "Show total", False: "Show this session"}
 
@@ -581,32 +646,32 @@ class App1:
         label.grid(row=0, column=0)
         self.session_button = Button(self.frame, text=n[session], command=self.show_session, width=20, bg=fg, fg=bg)
         self.session_button.grid(row=1, column=0, pady=3, padx=1)
-        self.new_session_button = Button(self.frame, text="Start new session", command=self.new_session, width=20, bg=fg,
-                                         fg=bg)
+        self.new_session_button = Button(self.frame, text="Start new session", command=self.new_session, width=20,
+                                         bg=fg, fg=bg)
         self.new_session_button.grid(row=1, column=1, pady=3, padx=1)
         label = Label(self.frame, text="Appearance and usage:", bg=bg, fg=fg)
         label.grid(row=2, column=0)
         label = Label(self.frame, text="Value", bg=bg, fg=fg)
         label.grid(row=2, column=1)
-        self.text_colour = Button(self.frame, text="Change text colour", command=self.fgcolour, width=20, bg=fg, fg=bg)
+        self.text_colour = Button(self.frame, text="Change text colour", command=self.fg_colour, width=20, bg=fg, fg=bg)
         self.text_colour.grid(row=3, column=0, pady=3, padx=1)
         self.fg_entry = Entry(self.frame)
         self.fg_entry.grid(row=3, column=1, columnspan=2)
-        self.app_colour = Button(self.frame, text="Change app colour", command=self.bgcolour, width=20, bg=fg, fg=bg)
+        self.app_colour = Button(self.frame, text="Change app colour", command=self.bg_colour, width=20, bg=fg, fg=bg)
         self.app_colour.grid(row=4, column=0, pady=3, padx=1)
         self.bg_entry = Entry(self.frame)
         self.bg_entry.grid(row=4, column=1, columnspan=2)
-        self.app2_colour = Button(self.frame, text="Change app 2nd colour", command=self.bg2colour, width=20, bg=fg,
+        self.app2_colour = Button(self.frame, text="Change app 2nd colour", command=self.bg2_colour, width=20, bg=fg,
                                   fg=bg)
         self.app2_colour.grid(row=5, column=0, pady=3, padx=1)
         self.bg2_entry = Entry(self.frame)
         self.bg2_entry.grid(row=5, column=1, columnspan=2)
-        self.ongoing_rows = Button(self.frame, text="Change Ongoing tasks rows", command=self.ongoingrowchange,
+        self.ongoing_rows = Button(self.frame, text="Change Ongoing tasks rows", command=self.set_ongoing_rows,
                                    width=20, bg=fg, fg=bg)
         self.ongoing_rows.grid(row=6, column=0, pady=3, padx=1)
         self.ongoing_rows_entry = Entry(self.frame)
         self.ongoing_rows_entry.grid(row=6, column=1, columnspan=2)
-        self.paused_rows = Button(self.frame, text="Change Paused tasks rows", command=self.pausedrowchange, width=20,
+        self.paused_rows = Button(self.frame, text="Change Paused tasks rows", command=self.set_paused_rows, width=20,
                                   bg=fg, fg=bg)
         self.paused_rows.grid(row=7, column=0, pady=3, padx=1)
         self.paused_rows_entry = Entry(self.frame)
@@ -634,119 +699,185 @@ class App1:
     def remove_task():
         app0.remove_task()
 
-    def show_info(self):
-        self.settings_window = Toplevel(self.master)
-        self.app = App2(self.settings_window)
+    @staticmethod
+    def show_info():
+        app0.show_info()
 
     def save_settings(self):
         settings.save_settings()
         self.settings_save.configure(bg=settings.fg_colour, fg=settings.bg_colour)
+        self.saved = True
+        self.is_saved()
 
     def show_session(self):
-        """Changes whether app0 shows total time or session time, also changes settings button"""
+        """
+        Changes whether app0 shows total time or session time, also changes settings button
+        :return: None
+        """
         if not app0.is_saved():
-            messagebox.showerror("Save before new session", "You must save before you can start show session")
+            messagebox.showerror("Save before new session", "You must save before you can show session")
             return
-        if settings.show_error_messages:
-            if not settings.session:
+        if not settings.session:
+            if settings.show_error_messages:
                 messagebox.showerror("Display Update", "Showing current session", icon="info")
-                settings.session = True
-                self.session_button.configure(text="Show total time")
-            else:
+            settings.session = True
+            self.session_button.configure(text="Show total time")
+        else:
+            if settings.show_error_messages:
                 messagebox.showerror("Display Update", "Showing total work time", icon="info")
-                settings.session = False
-                self.session_button.configure(text="Show session time")
+            settings.session = False
+            self.session_button.configure(text="Show session time")
         app0.update()
 
     @staticmethod
     def new_session():
+        """
+        Starts new session AND updates app0
+        :return: None
+        """
         if settings.session:
             app0.worktasks.new_session()
             messagebox.showerror("Session Update", "A new session has been started", icon="info")
+            app0.saved = False
+            app0.is_saved()
+            app0.update()
+            return
         messagebox.showerror("Session Update", "Show current session before starting a new one", icon="info")
 
-    def ongoingrowchange(self):
-        global ongoing_rows
+    def set_ongoing_rows(self):
+        """
+        changed the number of rows in the ongoing ListBox
+        :return: None
+        """
         try:
-            ongoing_rows = int(self.ongoing_rowsentry.get())
-            setting[4][1] = self.ongoing_rowsentry.get()
-            App0.completed.configure(height=ongoing_rows)
-            self.settingssave.configure(bg="red", fg="white")
-        except:
-            messagebox.showerror("Change Number of rows", "Input must be a number", parent=self)
+            settings.ongoing_rows = int(self.ongoing_rows_entry.get())
+            app0.ongoing.configure(height=settings.ongoing_rows)
+        except ValueError:
+            messagebox.showerror("Change Number of rows", "Input must be a number", parent=self.master)
+        self.saved = False
+        self.is_saved()
 
-    def pausedrowchange(self):
-        global paused_rows
+    def set_paused_rows(self):
+        """
+        changes the number of rows in the paused ListBox
+        :return: None
+        """
         try:
-            paused_rows = int(self.paused_rowsentry.get())
-            setting[5][1] = self.paused_rowsentry.get()
-            App0.tasks.configure(height=paused_rows)
-            self.settingssave.configure(bg="red", fg="white")
-        except:
-            messagebox.showerror("Change Number of rows", "Input must be a number", parent=self)
+            settings.paused_rows = int(self.paused_rows_entry.get())
+            app0.paused.configure(height=settings.paused_rows)
+        except ValueError:
+            messagebox.showerror("Change Number of rows", "Input must be a number", parent=self.master)
+        self.saved = False
+        self.is_saved()
 
-    def bgcolour(self):
+    def bg_colour(self):
+        """
+        changes the first background colour it takes input from the rgb field and only takes inputs in the format
+        '(255,255,255)'
+        :return: None
+        """
         try:
-            bg = '#%02x%02x%02x' % tuple(map(int, self.bg_entry.get()[1:-1].split(",")))
+            colour_tuple = tuple(map(int, self.bg_entry.get()[1:-1].split(",")))
+            if any(i > 255 or i < 0 for i in colour_tuple):
+                raise ValueError
+            bg = '#%02x%02x%02x' % colour_tuple
             settings.bg_colour = bg
             root0.tk_setPalette(background=bg, fg=settings.fg_colour)
-            self.settings_save.configure(bg="red", fg="white")
         except (TypeError, ValueError):
-            messagebox.showerror("Change bg colour", "Colour must be in (R,G,B) format", parent=self)
+            messagebox.showerror("Change bg colour", "Colour must be in (R,G,B) format", parent=self.master)
+        self.saved = False
+        self.is_saved()
         app0.update()
 
-    def bg2colour(self):
-        """ changes the background colour it takes input from the rgb field and only takes inputs in
-                the format '(255,255,255)' """
+    def bg2_colour(self):
+        """
+        changes the 2nd background colour it takes input from the rgb field and only takes inputs in the format
+        '(255,255,255)'
+        :return: None
+        """
         try:
-            bg2 = '#%02x%02x%02x' % tuple(map(int, self.bg2_entry.get()[1:-1].split(",")))
+            colour_tuple = tuple(map(int, self.bg2_entry.get()[1:-1].split(",")))
+            if any(i > 255 or i < 0 for i in colour_tuple):
+                raise ValueError
+            bg2 = '#%02x%02x%02x' % colour_tuple
             settings.bg2_colour = bg2
-            self.settings_save.configure(bg="red", fg="white")
         except (TypeError, ValueError):
-            messagebox.showerror("Change bg colour", "Colour must be in (R,G,B) format", parent=self)
+            messagebox.showerror("Change bg colour", "Colour must be in (R,G,B) format", parent=self.master)
+        self.saved = False
+        self.is_saved()
         app0.update()
 
-    def fgcolour(self):
-        """ changes the foreground colour (text colour) it takes input from the rgb field and only takes inputs in
-        the format '(255,255,255)' """
+    def fg_colour(self):
+        """
+        changes the foreground colour (text colour) it takes input from the rgb field and only takes inputs in
+        the format '(255,255,255)'
+        :return: None
+        """
         try:
-            fg = '#%02x%02x%02x' % tuple(map(int, self.fg_entry.get()[1:-1].split(",")))  # don't touch: one line magic
+            colour_tuple = tuple(map(int, self.fg_entry.get()[1:-1].split(",")))
+            if any(i > 255 or i < 0 for i in colour_tuple):
+                raise ValueError
+            fg = '#%02x%02x%02x' % colour_tuple
             settings.fg_colour = fg
             root0.tk_setPalette(background=settings.bg_colour, fg=fg)
-            self.settings_save.configure(bg="red", fg="blue")
-            messagebox.showerror("Change fg colour", "Colour has been changed\n"
-                                                     "a restart may be required to see full effect.",
-                                 parent=self.master)
+            messagebox.showerror("Change fg colour", "Colour has been changed a restart may be required to see full "
+                                                     "effect.", parent=self.master)
         except (TypeError, ValueError):
             messagebox.showerror("Change fg colour", "Colour must be in (R,G,B) format", parent=self.master)
+        self.saved = False
+        self.is_saved()
         app0.update()
 
     def warning_dialog(self):
-        """ changes wheter warning dialogs appear, also changes the text of the button"""
+        """changes whether warning dialogs appear, also changes the text of the button"""
         if settings.show_error_messages:
             settings.show_error_messages = False
             self.warning.configure(text="Turn on warning dialogs")
-            messagebox.showerror("Warning dialogs", "Dialogs like this one will no longer be displayed unless necessary"
-                                 , icon="info", parent=self)
+            messagebox.showinfo("Warning dialogs", "Dialogs like this one will no longer be displayed unless necessary",
+                                parent=self.master)
         elif not settings.show_error_messages:
             settings.show_error_messages = True
             self.warning.configure(text="Turn off warning dialogs")
-            messagebox.showerror("Warning dialogs", "Dialogs like this one will now always be displayed", icon="info",
-                                 parent=self)
-        self.settingssave.configure(bg="red", fg=bg)  # turns the save settings buttnon red
+            messagebox.showinfo("Warning dialogs", "Dialogs like this one will now always be displayed",
+                                parent=self.master)
+        self.saved = False
+        self.is_saved()
 
-    def restore(self):
+    @staticmethod
+    def restore():
         """ Restores the settings to default and restarts the app"""
         result = messagebox.askyesno("Restore settings", "Are you sure you want to restore your settings to default?",
                                      icon="question")
         if result:
             settings.default_settings()
-            savesettings(self, setting)
-        result = messagebox.askyesno("Restore settings", "settings have been restored to their default value\n"
-                                                         "the app needs to be restarted for this to take full effect\n"
+            settings.save_settings()
+        result = messagebox.askyesno("Restore settings", "settings have been restored to their default value "
+                                                         "the app needs to be restarted for this to take full effect.\n"
                                                          "do you wish to restart now?", icon="question")
         if result:
             quit()
+
+    def is_saved(self):
+        """returns whether settings are saved AND changes button colour"""
+        if self.saved:
+            self.settings_save.configure(bg=settings.fg_colour, fg=settings.bg_colour)
+        else:
+            self.settings_save.configure(bg="red", fg=settings.fg_colour)
+        return self.saved
+
+    def ask_save(self):
+        """should i save settings?"""
+        if self.is_saved():
+            self.master.destroy()
+            return
+        question = messagebox.askyesnocancel("Save", "Do you want to save the settings before you close the window?")
+        if question is True:
+            self.save_settings()
+            self.master.destroy()
+            return
+        if question is False:
+            self.master.destroy()
+            return
 
 
 # ------------------------------------------------------------------------------------------------------------- Info app
@@ -765,13 +896,10 @@ class App2:
 if __name__ == "__main__":
     settings = Settings()
     root0 = Tk()
-    root0.resizable(0, 0)
-    root0.protocol("WM_DELETE_WINDOW", ask_save)
     app0 = App0(root0)
+    root0.protocol("WM_DELETE_WINDOW", app0.ask_save)
+    root0.resizable(0, 0)
     root0.mainloop()
 # --------------------------------------------------------------------------------------------------------- save changes
 
 sys.exit()
-
-# ---------------------------------------------------------------------------------------------------------------- TO DO
-# :)

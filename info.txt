@@ -4,15 +4,9 @@
 #         By Kjell Isak Nyberg         #
 #                                      #
 #            isak@nyberg.dev           #
-#            4 February 2019           #
+#             9 March 2019             #
 #--------------------------------------#
 
-			***
-update from February 2019 is a
-major overhaul and some functions from
-the previous versions may not yet be
-implemented in this version.
-			***
 Information:
 Work Times is an application aimed to
 enable people to keep track on much 
@@ -23,11 +17,6 @@ using the modules: tkinter, os, time
 and platform, and datetime. It has been
 compiled for windows (32 & 64).
 
-Key:	*** removed ***
-In order to add more than 5 tasks, a key
-needs to be used. This is done by adding
-the key as a new task and it will sort
-itself out. 
 ----------------------------------------
 
 Usage:
@@ -68,30 +57,33 @@ To start a task it needs to be selected
 from the "paused" field thereafter press
 the "Start | Stop" button. Then the task
 will move to the "Ongoing" field.
-To stop a task do the same procedure
+To stop a task do the same procedure.
  
-Sort
+Sorting:
 All tasks can be sorted alphabetically
 by pressing the "Sort ABC" button or
 sorted by the amount of time that has
 been spent on each task by pressing the
 "Sort Time" button.
 
-Settings:  *** work in progress ***
+Settings: 
 Pressing the gear icon will open the
 settings window.
 
 ----------------------------------------
 
-settings:
+Settings:
 The settings can be accessed by typing
 "settings" into the "New Task" field
 and then pressing "Add."
  
              #-------------#
-             # Save        #
+             #Sessions:    #
              #[_____][____]#
              # A & U       #
+             #[_____][____]#
+             #[_____][____]#
+             #[_____][____]#
              #[_____][____]#
              #[_____][____]#
              #[_____]      #
@@ -100,21 +92,23 @@ and then pressing "Add."
              #[_____]      #
              #-------------#
 
-Clear all tasks:
-This removes all tasks that have been
-created.
-
-Remove selected task:
-This removes the selected task, tasks
-that are ongoing cannot be removed.
+Sessions:
+session allows you to keep track of
+smaller time periods. This lets you
+reset the time of all tasks while 
+still keeping track of the total amount
+of time spent on a task. 
 
 Change text and app colour:
 The colour can be changed by entering an
 RGB code in the form of (R,G,B) for 
 example (125,200,0) and then pressing 
 the respective change colour buttons.
+The 2nd app colour is the background 
+colour of every second line in the list.
 (Restarting the app is required for a
 full effect).
+
 example colour schemes:
 	#------------------------#
 	#Red:     (255,255,255)  #
@@ -149,6 +143,10 @@ you want to save when you close the app.
 Save and restore:
 These save the settings and restores the
 default settings respectively.
+
+Remove selected task:
+This removes the selected task, tasks
+that are ongoing cannot be removed.
 
 #--------------------------------------#
 #              Good Luck               #
