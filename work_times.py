@@ -96,7 +96,7 @@ class TaskList:
             write += task.get_name() + "_" + str(task.get_total()) + "_" + str(task.get_session()) + "\n"
         with open(settings.path_data, "a") as saveFile:  # recreate new file
             saveFile.write(write)  # puts massive string in file
-        settings.last_save = time.time()
+        settings.last_save = int(time.time())
 
 
 # ----------------------------------------------------------------------------------------------------------- Task class
@@ -137,12 +137,18 @@ class Task:
         self.session = 0
 
     def start_task(self):
-        """Records the start time of a task in self.start"""
+        """
+        Records the start time of a task in self.start
+        :return: None
+        """
         self.start = int(time.time())
         self.ongoing = True
 
     def stop_task(self):
-        """Adds the spent time of an ongoing task to total and session"""
+        """
+        Adds the spent time of an ongoing task to total and session
+        :return: None
+        """
         self.total += int(time.time() - self.start)
         self.session += int(time.time() - self.start)
         self.ongoing = False
@@ -191,7 +197,9 @@ class Task:
 class Settings:
 
     def __init__(self):
-        """Initialises all settings variables and paths"""
+        """
+        Initialises all settings variables and paths
+        """
         # ------------- editable in app1
         self.bg_colour = '#007fc2'  # hexadecimal
         self.bg2_colour = '#006cb2'
@@ -221,7 +229,10 @@ class Settings:
         self.app_font = ('Courier New', self.font_size)
 
     def __repr__(self):
-        """Prints all settings"""
+        """
+        Prints all settings
+        :return: str, list of all settings
+        """
         string_settings = self.to_string().split('\n')
         names = [attr for attr in vars(self) if not attr.startswith('__')]
         return str(string_settings[index] + ' : ' + names[index] for index in range(len(string_settings)))
@@ -295,6 +306,10 @@ class Settings:
         self.app_font = ('Courier New', self.font_size)
 
     def set_filepaths(self):
+        """
+        Sets all filepaths to variables in the settings class while accounting for what os the user is using
+        :return: None
+        """
         if getattr(sys, 'frozen', False):  # frozen
             dir_ = os.path.dirname(sys.executable)
         else:  # unfrozen
@@ -311,6 +326,10 @@ class Settings:
             self.path_icon = os.path.join(os.path.dirname(dir_), "worktimes/icon.ico")
 
     def load_info(self):
+        """
+        Loads the app info from the info.txt
+        :return: None
+        """
         try:
             with open(self.path_info, 'r') as infofile:
                 for line in infofile:
@@ -319,6 +338,10 @@ class Settings:
             self.info = ['Info file could not be read.']
 
     def load_settings(self):
+        """
+        Loads the settings from the settings.rfe file. This is hardcoded since the settings.rfe is just string
+        :return: None
+        """
         try:
             load = []
             with open(self.path_settings, 'r') as infofile:
@@ -331,22 +354,26 @@ class Settings:
             self.ongoing_rows = int(load[4][1])
             self.paused_rows = int(load[5][1])
             self.last_save = int(load[6][1])
-            # self.font_size = int(load[7][1]) This was a stupid option to change, should be based on platform
-            self.session = load[8][1] == "True"  # == False so that if file is corrupt it returns False
+            # self.font_size = int(load[7][1]) DON'T USE This was a stupid option to change, should be based on platform
+            self.session = load[8][1] == "True"  # == True so that if file is corrupt it returns False
 
             colours = [self.bg_colour, self.bg2_colour, self.fg_colour]
             if any((len(colour) != 7 or colour[0] != '#') for colour in colours):
-                raise Exception('Colour error')  # checking if all colours are hexadecimal #ff0011
+                raise ValueError  # checking if all colours are hexadecimal #ff0011
 
         except (FileNotFoundError, UnicodeDecodeError, ValueError):
             self.default_settings()
             self.settings_load_error = True
 
     def save_settings(self):
-        open(self.path_settings, 'w').close()
-        write = settings.to_string()
+        """
+        saves settings to the settings.rfe file.
+        :return: None
+        """
+        open(self.path_settings, 'w').close()  # deleted old file
+        write = settings.to_string()  # massive string of all settings
         with open(self.path_settings, "a") as settings_save_file:
-            settings_save_file.write(write)
+            settings_save_file.write(write)  # writes massive string to settings.rfe file
 
 
 # ------------------------------------------------------------------------------------------------------- Work Times app
@@ -411,7 +438,7 @@ class App0:
             messagebox.showerror("Settings file corrupt",
                                  "The settings file could not be read due to unexpected character or format\n"
                                  "The default settings will be used.\n"
-                                 "If this error is persistent please restore to default under in the settings window",
+                                 "If this error is persistent please restore to default under in the settings window.",
                                  parent=self.master)
 
         # ------------------------------------------------------------------------------------------------- Import Tasks
@@ -427,9 +454,9 @@ class App0:
 
         except FileNotFoundError:
 
-            create_new_savefile = messagebox.askyesno("Save not found",
+            create_new_savefile = messagebox.askyesno("Save data not found",
                                                       "The data file was not found, do you wish to make a new one?\n"
-                                                      "This will cause any previous data to be lost",
+                                                      "This will cause any previous data to be lost.",
                                                       parent=self.master)
             if create_new_savefile:
                 self.worktasks.save()
@@ -445,7 +472,7 @@ class App0:
                                                       "Could not read save file due to unexpected character "
                                                       "or formatting.\n" +
                                                       "do you wish to make a new one?\n"
-                                                      "This will cause all previous data to be lost")
+                                                      "This will cause all previous data to be lost.")
             self.update()
             if create_new_savefile:
                 self.worktasks.save()
@@ -455,6 +482,7 @@ class App0:
                                      "Please review the data.txt file in order to prevent data loss.\n\n"
                                      "Program will exit.")
             quit()
+        # ------------------------------------------------------------------------------------------------- Starts clock
 
         self.clock()
 
@@ -471,23 +499,31 @@ class App0:
     # --------------------------------------------------------------------------------------------- App0 class functions
     @staticmethod
     def to_task_name(selection):
-        """reformat ListBox format to only the taskname"""
+        """
+        reformat ListBox format to only the taskname
+        :param selection: A selection object from the listbox
+        :return: str returns name of the selected task.
+        """
         return selection.split(settings.divide_character)[0]
 
     def clock(self):
-        """Calls self.update every cycle_time ms"""
+        """
+        Calls self.update every cycle_time ms
+        :return: None
+        """
         cycle_time = 55000  # milliseconds (divide by 1000 to get seconds)
         self.update()
-        self.master.after(cycle_time, self.clock)
+        self.master.after(cycle_time, self.clock)  # remember this needs to be self.clock and NOT self.clock()
 
     def update(self):
-        bg = settings.bg_colour
-        bg2 = settings.bg2_colour
-        fg = settings.fg_colour
+        """
+        Updates app0, by deleting all elements from the 2 ListBoxes and appending them again with the updated time.
+        :return:None
+        """
         self.paused.delete(0, END)  # empties both lists
         self.ongoing.delete(0, END)
-        paused_bg1, paused_bg2 = bg, bg2  # alternating colours and lines
-        ongoing_bg1, ongoing_bg2 = bg, bg2
+        paused_bg1, paused_bg2 = settings.bg_colour, settings.bg2_colour  # alternating colours and lines
+        ongoing_bg1, ongoing_bg2 = settings.bg_colour, settings.bg2_colour
         for task in self.worktasks.get_list():  # adds tasks back into lists
             if task.is_ongoing():
                 self.ongoing.insert(END, task.displaytext())
@@ -498,36 +534,52 @@ class App0:
                 self.paused.itemconfig(END, {'bg': paused_bg1})
                 paused_bg1, paused_bg2 = paused_bg2, paused_bg1
 
-        self.master.tk_setPalette(background=bg, fg=fg)
+        self.master.tk_setPalette(background=settings.bg_colour, fg=settings.fg_colour)
         for widget in self.front:
-            widget.configure(bg=fg, fg=bg)
+            widget.configure(bg=settings.fg_colour, fg=settings.bg_colour)
         self.is_saved()
 
     def open_settings(self):
+        """
+        Opens the settings window using Toplevel
+        :return: None
+        """
         self.settings_window = Toplevel(self.master)
         self.app1 = App1(self.settings_window)
-        self.settings_window.protocol("WM_DELETE_WINDOW", self.app1.ask_save)
+        self.settings_window.protocol("WM_DELETE_WINDOW", self.app1.ask_save)  # prompt when window is closed
 
     def save(self):
+        """
+        Saves the worktasks
+        :return:
+        """
         if self.worktasks.is_ongoing():
             if settings.show_error_messages:
-                messagebox.showerror("Save error", "Cannot save when one or more tasks are ongoing", parent=self.master)
-                return
+                messagebox.showerror("Save error", "Cannot save if one or more tasks are ongoing.", parent=self.master)
+        self.update()
         self.worktasks.save()
         self.saved = True
-        self.update()
+        self.is_saved()
 
     def is_saved(self):
-        """returns whether project is saved AND changes button colour"""
-        if self.saved:
+        """
+        returns whether project is saved AND changes button colour
+        :return: bool if project is saved
+        """
+        if self.saved and not self.worktasks.is_ongoing():
             self.save_button.configure(bg=settings.fg_colour, fg=settings.bg_colour)
         else:
             self.save_button.configure(bg="red", fg=settings.fg_colour)
 
+        self.saved = self.saved and not self.worktasks.is_ongoing()
+
         return self.saved
 
     def ask_save(self):
-        """should i save?"""
+        """
+        should i save?
+        :return: None, put triggers a popup
+        """
         if self.is_saved():
             root0.destroy()
             return
@@ -551,14 +603,18 @@ class App0:
         self.update()
 
     def add(self):
+        """
+        Adds task to TaskList and ListBox
+        :return: None but appends new task to paused ListBox
+        """
         task_name = self.entry.get()
-        if len(task_name) == 0:
+        if len(task_name) == 0:  # Checks if entry field is empty
             return
-        if self.worktasks.in_task_list(task_name):
+        if self.worktasks.in_task_list(task_name):  # Checks for duplicates
             messagebox.showerror("New Task error", "There is already a task with the name: \n '" + task_name + "'",
                                  parent=self.master)
             return
-        if any(character in task_name for character in ["#", "_", "%", "&", "'", '"']):
+        if any(character in task_name for character in ["#", "_", "%", "&", "'", '"']):  # checks for illegal characters
             messagebox.showerror("New Task error",
                                  "Do not use any of the following characters in the task name:\n# _ % & ' " + '"',
                                  parent=self.master)
@@ -566,14 +622,16 @@ class App0:
 
         task = Task(task_name)  # Creates new task
         self.worktasks.append_task(task)  # adds new task to TaskList class
-        self.paused.insert(END, task.displaytext())  # adds new task to App0 list
         self.entry.delete(0, 'end')  # Deletes entry-field
         self.saved = False
-        self.update()
+        self.update()  # this update should also append the task to the app0 ListBox
 
     def start_stop(self):
-        """ This method moves selected task from paused to ongoing and vise versa, while recording the time and adds it
-        to a value stored in the Task list for the selected task"""
+        """
+        This method moves selected task from paused to ongoing and vise versa, while recording the time and adds it
+        to a value stored in the Task list for the selected task
+        :return: None
+        """
         selection = self.ongoing.curselection()  # checks which listbox that the selected task is in
         if len(selection) == 0:
             selection = self.paused.curselection()
@@ -586,33 +644,32 @@ class App0:
             task_name = self.to_task_name(self.paused.get(selection[0]))  # gets taskname from listbox format
             task = self.worktasks.get_task(task_name)  # gets task object from tasklist using taskname
             task.start_task()
-            self.paused.delete(selection[0])  # removes task from paused and adds to ongoing
-            self.ongoing.insert(END, task.displaytext())
             self.saved = False
             self.update()
-            return
+            return self.is_saved()
         task_name = self.to_task_name(self.ongoing.get(selection[0]))
         task = self.worktasks.get_task(task_name)
         task.stop_task()
-        self.ongoing.delete(selection[0])
-        self.paused.insert(END, task.displaytext())
         self.saved = False
         self.update()
+        self.is_saved()
 
     def remove_task(self):
-        """ Deletes task that is currently selected in paused listbox """
+        """
+        Deletes task that is currently selected in paused listbox
+        :return: None
+        """
         selection = self.paused.curselection()
         if len(selection) == 0:  # if no task is selected in either box the it will notify user if open is on
             if settings.show_error_messages:
-                messagebox.showerror("No task selected", "Only paused tasks can be removed.", parent=root0)
+                messagebox.showerror("No task selected", "Only paused tasks can be removed.", parent=self.master)
                 return
         task_name = self.to_task_name(self.paused.get(selection[0]))  # gets taskname from listbox format
         task = self.worktasks.get_task(task_name)  # gets task object from tasklist using taskname
         result = messagebox.askyesno("Remove task?", "Are you sure you want to remove:\n" + task_name +
-                                     "\n\nThis cannot be undone", icon="question")
+                                     "\n\nThis cannot be undone.", icon="question")
         if result:
             self.worktasks.remove_task(task)
-            self.paused.delete(selection[0])  # removes task from paused
             self.saved = False
             self.update()
 
@@ -697,13 +754,25 @@ class App1:
     # --------------------------------------------------------------------------------------------- App1 class functions
     @staticmethod
     def remove_task():
+        """
+        chained methods
+        :return: None
+        """
         app0.remove_task()
 
     @staticmethod
     def show_info():
+        """
+        chained method
+        :return: None
+        """
         app0.show_info()
 
     def save_settings(self):
+        """
+        Saved settings and changes button colour
+        :return: None
+        """
         settings.save_settings()
         self.settings_save.configure(bg=settings.fg_colour, fg=settings.bg_colour)
         self.saved = True
@@ -715,18 +784,20 @@ class App1:
         :return: None
         """
         if not app0.is_saved():
-            messagebox.showerror("Save before new session", "You must save before you can show session")
+            messagebox.showerror("Save before new session", "You must save before you can show session.")
             return
         if not settings.session:
             if settings.show_error_messages:
-                messagebox.showerror("Display Update", "Showing current session", icon="info")
+                messagebox.showerror("Display Update", "Showing current session.", icon="info")
             settings.session = True
             self.session_button.configure(text="Show total time")
         else:
             if settings.show_error_messages:
-                messagebox.showerror("Display Update", "Showing total work time", icon="info")
+                messagebox.showerror("Display Update", "Showing total work time.", icon="info")
             settings.session = False
             self.session_button.configure(text="Show session time")
+        self.saved = False
+        self.is_saved()
         app0.update()
 
     @staticmethod
@@ -737,12 +808,12 @@ class App1:
         """
         if settings.session:
             app0.worktasks.new_session()
-            messagebox.showerror("Session Update", "A new session has been started", icon="info")
+            messagebox.showerror("Session Update", "A new session has been started.", icon="info")
             app0.saved = False
             app0.is_saved()
             app0.update()
             return
-        messagebox.showerror("Session Update", "Show current session before starting a new one", icon="info")
+        messagebox.showerror("Session Update", "Show current session before starting a new one.", icon="info")
 
     def set_ongoing_rows(self):
         """
@@ -848,12 +919,13 @@ class App1:
         """ Restores the settings to default and restarts the app"""
         result = messagebox.askyesno("Restore settings", "Are you sure you want to restore your settings to default?",
                                      icon="question")
-        if result:
-            settings.default_settings()
-            settings.save_settings()
-        result = messagebox.askyesno("Restore settings", "settings have been restored to their default value "
+        if not result:
+            return
+        settings.default_settings()
+        settings.save_settings()
+        result = messagebox.askyesno("Restore settings", "Dettings have been restored to their default value "
                                                          "the app needs to be restarted for this to take full effect.\n"
-                                                         "do you wish to restart now?", icon="question")
+                                                         "Do you wish to restart now?", icon="question")
         if result:
             quit()
 
@@ -882,7 +954,9 @@ class App1:
 
 # ------------------------------------------------------------------------------------------------------------- Info app
 class App2:
-    """ this is just a text window that displays the text from the info file"""
+    """
+    this is just a text window that displays the text from the info file
+    """
 
     def __init__(self, master):
         textbox = Text(master, height=28, width=40)
