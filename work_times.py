@@ -210,7 +210,7 @@ class Settings:
         self.session = False
         self.last_save = 0
         # ------------- dynamic non editable
-        self.windows = platform.system() == 'win32'
+        self.windows = platform.system() == 'Windows'
         self.space = 26 if self.windows else 28
         self.font_size = 12 if self.windows else 16
         self.settings_load_error = False  # if True it triggers a popup box when app0 is launched
@@ -299,7 +299,7 @@ class Settings:
         self.ongoing_rows = 4
         self.paused_rows = 12
         self.last_save = 0
-        self.windows = platform.system() == 'win32'
+        self.windows = platform.system() == 'Windows'
         self.space = 26 if self.windows else 26
         self.font_size = 12 if self.windows else 16
         self.divide_character = u"\u00A0"  # setting '·'   MAC:' '   '-'   '—'   '…'   '_' win:u"\u00A0"
