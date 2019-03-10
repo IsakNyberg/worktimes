@@ -4,6 +4,7 @@ import time
 import platform
 from tkinter import *
 from tkinter import messagebox
+import hashlib
 
 
 # ------------------------------------------------------------------------------------------------------ Task List Class
@@ -200,7 +201,7 @@ class Settings:
         """
         Initialises all settings variables and paths
         """
-        # ------------- editable in app1
+        # ------------- editable in App1
         self.bg_colour = '#007fc2'  # hexadecimal
         self.bg2_colour = '#006cb2'
         self.fg_colour = '#ffffff'
@@ -209,6 +210,7 @@ class Settings:
         self.paused_rows = 12
         self.session = False
         self.last_save = 0
+        self.key = 'key'
         # ------------- dynamic non editable
         self.windows = platform.system() == 'Windows'
         self.space = 26 if self.windows else 28
@@ -284,7 +286,8 @@ class Settings:
         return ('bg-colour_' + str(self.bg_colour) + '\nbg2-colour_' + str(self.bg2_colour) + '\nfg-colour_' +
                 str(self.fg_colour) + '\nshow-error-messages_' + str(self.show_error_messages) + '\nongoing-rows_' +
                 str(self.ongoing_rows) + '\npaused-rows_' + str(self.paused_rows) + '\nlast-save_' +
-                str(self.last_save) + '\nfont-size_' + str(self.font_size) + '\nsession_' + str(self.session))
+                str(self.last_save) + '\nfont-size_' + str(self.font_size) + '\nsession_' + str(self.session) +
+                '\nKey_' + str(self.key))
 
     def default_settings(self):
         """
@@ -304,6 +307,7 @@ class Settings:
         self.font_size = 12 if self.windows else 16
         self.divide_character = u"\u00A0"  # setting '·'   MAC:' '   '-'   '—'   '…'   '_' win:u"\u00A0"
         self.app_font = ('Courier New', self.font_size)
+        self.key = self.key  # should change
 
     def set_filepaths(self):
         """
@@ -356,6 +360,7 @@ class Settings:
             self.last_save = int(load[6][1])
             # self.font_size = int(load[7][1]) DON'T USE This was a stupid option to change, should be based on platform
             self.session = load[8][1] == "True"  # == True so that if file is corrupt it returns False
+            self.key = load[9][1]
 
             colours = [self.bg_colour, self.bg2_colour, self.fg_colour]
             if any((len(colour) != 7 or colour[0] != '#') for colour in colours):
@@ -374,6 +379,27 @@ class Settings:
         write = settings.to_string()  # massive string of all settings
         with open(self.path_settings, "a") as settings_save_file:
             settings_save_file.write(write)  # writes massive string to settings.rfe file
+
+    def full_version(self, entry_key=''):
+        """
+        compares the hash of the key to a master hash
+        :return: bool whether the key matches any of the license hashes
+        """
+        hashed_keys = ['8d15e1733fbf3129a9e201c2b7af6024e5c6b1d11fa9893aafc32536e147aec6',
+                       'e811be7e5d5cdcad2ce1161b1260c5aa2aae78952626dd206d0b2697a3b7a9de',
+                       '394ac5ddcf9dbef4a3456e70d5c3939ff86cae0e08824ba8ed31b6128d7c1a06',
+                       '16c47f535cd231bd9d24cfdd1e7342c4dd4f6bc04987988177db4203cb7fccd5',
+                       '56df2216dc5a879dca41ad1b0a01b3e0850ea30e7793154ce244133f14a9a350',
+                       '3aabbcdb1634ac0324429a92f7613e11c154440b150cf5cfd0e7935669cabe15',
+                       'f316a30401ee64677f3cc430134df275590965a4a67569f0809c4040eeecb430',
+                       'a42bafae289799bb79ab2f2d71c5e2d8d7e26efc356ffa89166adb658c323f27',
+                       'b62a1c6c56ad2367706fe8239bea6a6a7cb0786fa49e7cfa66620f93d8fec471',
+                       '9563003439ca0b3f0c0f335a7a50e8f7a96165f63a96081572eab12becedde0a',
+                       '8d88650c1058556f6340fc2afd8cdc27e65e41520038e79465efeead2eb4c09d',
+                       '638cbbc0f342b002c2a78e65f27b8ead1786bbdb87fc338d5bb1fb52610fb21f']
+        settings_match = hashlib.sha256(self.key.encode()).hexdigest() in hashed_keys
+        entry_match = hashlib.sha256(entry_key.encode()).hexdigest() in hashed_keys
+        return settings_match or entry_match
 
 
 # ------------------------------------------------------------------------------------------------------- Work Times app
@@ -604,22 +630,28 @@ class App0:
 
     def add(self):
         """
-        Adds task to TaskList and ListBox
+        Adds task to TaskList and ListBox, while checking for: valid entry, name collusion, full version
         :return: None but appends new task to paused ListBox
         """
         task_name = self.entry.get()
         if len(task_name) == 0:  # Checks if entry field is empty
-            return
+            return False
         if self.worktasks.in_task_list(task_name):  # Checks for duplicates
             messagebox.showerror("New Task error", "There is already a task with the name: \n '" + task_name + "'",
                                  parent=self.master)
-            return
+            return False
         if any(character in task_name for character in ["#", "_", "%", "&", "'", '"']):  # checks for illegal characters
             messagebox.showerror("New Task error",
                                  "Do not use any of the following characters in the task name:\n# _ % & ' " + '"',
                                  parent=self.master)
-            return
-
+            return False
+        if len(self.worktasks) >= 5 and not settings.full_version():  # checks full version
+            messagebox.showerror("Full Version required",
+                                 "Please activate the full version in the settings window, or reach out to:\n"
+                                 "kjell@nyberg.dev\n"
+                                 "To obtain a key",
+                                 parent=self.master)
+            return False
         task = Task(task_name)  # Creates new task
         self.worktasks.append_task(task)  # adds new task to TaskList class
         self.entry.delete(0, 'end')  # Deletes entry-field
@@ -699,59 +731,62 @@ class App1:
         m = {True: "Turn off warning dialogs", False: "Turn on warning dialogs"}
         n = {True: "Show total", False: "Show this session"}
 
-        label = Label(self.frame, text="Sessions:", justify=LEFT, bg=bg, fg=fg)
-        label.grid(row=0, column=0)
-        self.session_button = Button(self.frame, text=n[session], command=self.show_session, width=20, bg=fg, fg=bg)
-        self.session_button.grid(row=1, column=0, pady=3, padx=1)
-        self.new_session_button = Button(self.frame, text="Start new session", command=self.new_session, width=20,
-                                         bg=fg, fg=bg)
-        self.new_session_button.grid(row=1, column=1, pady=3, padx=1)
-        label = Label(self.frame, text="Appearance and usage:", bg=bg, fg=fg)
-        label.grid(row=2, column=0)
-        label = Label(self.frame, text="Value", bg=bg, fg=fg)
-        label.grid(row=2, column=1)
-        self.text_colour = Button(self.frame, text="Change text colour", command=self.fg_colour, width=20, bg=fg, fg=bg)
-        self.text_colour.grid(row=3, column=0, pady=3, padx=1)
-        self.fg_entry = Entry(self.frame)
-        self.fg_entry.grid(row=3, column=1, columnspan=2)
-        self.app_colour = Button(self.frame, text="Change app colour", command=self.bg_colour, width=20, bg=fg, fg=bg)
-        self.app_colour.grid(row=4, column=0, pady=3, padx=1)
-        self.bg_entry = Entry(self.frame)
-        self.bg_entry.grid(row=4, column=1, columnspan=2)
-        self.app2_colour = Button(self.frame, text="Change app 2nd colour", command=self.bg2_colour, width=20, bg=fg,
-                                  fg=bg)
-        self.app2_colour.grid(row=5, column=0, pady=3, padx=1)
-        self.bg2_entry = Entry(self.frame)
-        self.bg2_entry.grid(row=5, column=1, columnspan=2)
-        self.ongoing_rows = Button(self.frame, text="Change Ongoing tasks rows", command=self.set_ongoing_rows,
-                                   width=20, bg=fg, fg=bg)
-        self.ongoing_rows.grid(row=6, column=0, pady=3, padx=1)
-        self.ongoing_rows_entry = Entry(self.frame)
-        self.ongoing_rows_entry.grid(row=6, column=1, columnspan=2)
-        self.paused_rows = Button(self.frame, text="Change Paused tasks rows", command=self.set_paused_rows, width=20,
-                                  bg=fg, fg=bg)
-        self.paused_rows.grid(row=7, column=0, pady=3, padx=1)
-        self.paused_rows_entry = Entry(self.frame)
-        self.paused_rows_entry.grid(row=7, column=1, columnspan=2)
-        self.warning = Button(self.frame, text=m[settings.show_error_messages], command=self.warning_dialog, width=20,
-                              bg=fg, fg=bg)
-        self.warning.grid(row=9, column=0, pady=3, padx=1)
-        Label(self.frame, text="Info, Save, Remove task and Restore Settings:", bg=bg, fg=fg).grid(row=10, column=0,
-                                                                                                   columnspan=2)
-        self.settings_save = Button(self.frame, text="Save settings", command=self.save_settings, bg=fg, width=20,
-                                    fg=bg)
-        self.settings_save.grid(row=11, column=0, pady=3, padx=1)
-        self.restore_setting = Button(self.frame, text="Restore default settings", command=self.restore, width=20,
-                                      bg=fg, fg=bg)
-        self.restore_setting.grid(row=11, column=1, pady=3, padx=1)
-        self.show_info_button = Button(self.frame, text="Show Info help and license", command=self.show_info, width=20,
-                                       bg=fg, fg=bg)
-        self.show_info_button.grid(row=12, column=0, pady=3, padx=1)
-        self.remove_task = Button(self.frame, text="Remove selected task", command=self.remove_task, width=20, bg=fg,
-                                  fg=bg)
-        self.remove_task.grid(row=12, column=1, pady=3, padx=1)
+        self.label_show_session = Label(self.frame, text="Sessions:", justify=LEFT, bg=bg, fg=fg)
+        self.label_show_session.grid(row=0, column=0)
+        self.button_show_session = Button(self.frame, text=n[session], command=self.show_session, width=20, bg=fg, fg=bg)
+        self.button_show_session.grid(row=1, column=0, pady=3, padx=1)
+        self.button_new_session = Button(self.frame, text="Start new session", command=self.new_session, width=20, bg=fg, fg=bg)
+        self.button_new_session.grid(row=1, column=1, pady=3, padx=1)
+
+        self.label_appearance_and_usage = Label(self.frame, text="Appearance and usage:", bg=bg, fg=fg)
+        self.label_appearance_and_usage.grid(row=2, column=0)
+        self.label_value = Label(self.frame, text="Value", bg=bg, fg=fg)
+        self.label_value.grid(row=2, column=1)
+        self.button_text_colour = Button(self.frame, text="Change text colour", command=self.fg_colour, width=20, bg=fg, fg=bg)
+        self.button_text_colour.grid(row=3, column=0, pady=3, padx=1)
+        self.entry_fg = Entry(self.frame)
+        self.entry_fg.grid(row=3, column=1, columnspan=2)
+        self.button_app_colour = Button(self.frame, text="Change app colour", command=self.bg_colour, width=20, bg=fg, fg=bg)
+        self.button_app_colour.grid(row=4, column=0, pady=3, padx=1)
+        self.entry_bg = Entry(self.frame)
+        self.entry_bg.grid(row=4, column=1, columnspan=2)
+        self.button_app2_colour = Button(self.frame, text="Change app 2nd colour", command=self.bg2_colour, width=20, bg=fg, fg=bg)
+        self.button_app2_colour.grid(row=5, column=0, pady=3, padx=1)
+        self.entry_bg2 = Entry(self.frame)
+        self.entry_bg2.grid(row=5, column=1, columnspan=2)
+        self.button_ongoing_rows = Button(self.frame, text="Change Ongoing tasks rows", command=self.set_ongoing_rows, width=20, bg=fg, fg=bg)
+        self.button_ongoing_rows.grid(row=6, column=0, pady=3, padx=1)
+        self.entry_ongoing_rows = Entry(self.frame)
+        self.entry_ongoing_rows.grid(row=6, column=1, columnspan=2)
+        self.button_paused_rows = Button(self.frame, text="Change Paused tasks rows", command=self.set_paused_rows, width=20, bg=fg, fg=bg)
+        self.button_paused_rows.grid(row=7, column=0, pady=3, padx=1)
+        self.entry_paused_rows = Entry(self.frame)
+        self.entry_paused_rows.grid(row=7, column=1, columnspan=2)
+        self.button_warning = Button(self.frame, text=m[settings.show_error_messages], command=self.warning_dialog, width=20, bg=fg, fg=bg)
+        self.button_warning.grid(row=9, column=0, pady=3, padx=1)
+
+        self.label_info_save = Label(self.frame, text="Info, Save, Remove task and Restore Settings:", bg=bg, fg=fg)
+        self.label_info_save.grid(row=10, column=0,  columnspan=2)
+        self.button_settings_save = Button(self.frame, text="Save settings", command=self.save_settings, bg=fg, width=20, fg=bg)
+        self.button_settings_save.grid(row=11, column=0, pady=3, padx=1)
+        self.button_restore_setting = Button(self.frame, text="Restore default settings", command=self.restore, width=20, bg=fg, fg=bg)
+        self.button_restore_setting.grid(row=11, column=1, pady=3, padx=1)
+        self.button_show_info = Button(self.frame, text="Show Info help and license", command=self.show_info, width=20, bg=fg, fg=bg)
+        self.button_show_info.grid(row=12, column=0, pady=3, padx=1)
+        self.button_remove_task = Button(self.frame, text="Remove selected task", command=self.remove_task, width=20, bg=fg, fg=bg)
+        self.button_remove_task.grid(row=12, column=1, pady=3, padx=1)
+
+        self.label_license = Label(self.frame, text="License:", bg=bg, fg=fg)
+        self.label_license.grid(row=13, column=0, columnspan=1)
+        self.label_key = Label(self.frame, text="Key", bg=bg, fg=fg)
+        self.label_key.grid(row=13, column=1, columnspan=1)
+        self.button_add_key = Button(self.frame, text="Enter Key:", command=self.add_key, bg=fg, width=20,fg=bg)
+        self.button_add_key.grid(row=14, column=0, pady=3, padx=1)
+        self.entry_key = Entry(self.frame)
+        self.entry_key.grid(row=14, column=1, columnspan=2)
 
     # --------------------------------------------------------------------------------------------- App1 class functions
+
     @staticmethod
     def remove_task():
         """
@@ -774,7 +809,7 @@ class App1:
         :return: None
         """
         settings.save_settings()
-        self.settings_save.configure(bg=settings.fg_colour, fg=settings.bg_colour)
+        self.button_settings_save.configure(bg=settings.fg_colour, fg=settings.bg_colour)
         self.saved = True
         self.is_saved()
 
@@ -790,12 +825,12 @@ class App1:
             if settings.show_error_messages:
                 messagebox.showerror("Display Update", "Showing current session.", icon="info")
             settings.session = True
-            self.session_button.configure(text="Show total time")
+            self.button_show_session.configure(text="Show total time")
         else:
             if settings.show_error_messages:
                 messagebox.showerror("Display Update", "Showing total work time.", icon="info")
             settings.session = False
-            self.session_button.configure(text="Show session time")
+            self.button_show_session.configure(text="Show session time")
         self.saved = False
         self.is_saved()
         app0.update()
@@ -821,7 +856,7 @@ class App1:
         :return: None
         """
         try:
-            settings.ongoing_rows = int(self.ongoing_rows_entry.get())
+            settings.ongoing_rows = int(self.entry_ongoing_rows.get())
             app0.ongoing.configure(height=settings.ongoing_rows)
         except ValueError:
             messagebox.showerror("Change Number of rows", "Input must be a number", parent=self.master)
@@ -834,7 +869,7 @@ class App1:
         :return: None
         """
         try:
-            settings.paused_rows = int(self.paused_rows_entry.get())
+            settings.paused_rows = int(self.entry_paused_rows.get())
             app0.paused.configure(height=settings.paused_rows)
         except ValueError:
             messagebox.showerror("Change Number of rows", "Input must be a number", parent=self.master)
@@ -848,7 +883,7 @@ class App1:
         :return: None
         """
         try:
-            colour_tuple = tuple(map(int, self.bg_entry.get()[1:-1].split(",")))
+            colour_tuple = tuple(map(int, self.entry_bg.get()[1:-1].split(",")))
             if any(i > 255 or i < 0 for i in colour_tuple):
                 raise ValueError
             bg = '#%02x%02x%02x' % colour_tuple
@@ -867,7 +902,7 @@ class App1:
         :return: None
         """
         try:
-            colour_tuple = tuple(map(int, self.bg2_entry.get()[1:-1].split(",")))
+            colour_tuple = tuple(map(int, self.entry_bg2.get()[1:-1].split(",")))
             if any(i > 255 or i < 0 for i in colour_tuple):
                 raise ValueError
             bg2 = '#%02x%02x%02x' % colour_tuple
@@ -885,7 +920,7 @@ class App1:
         :return: None
         """
         try:
-            colour_tuple = tuple(map(int, self.fg_entry.get()[1:-1].split(",")))
+            colour_tuple = tuple(map(int, self.entry_fg.get()[1:-1].split(",")))
             if any(i > 255 or i < 0 for i in colour_tuple):
                 raise ValueError
             fg = '#%02x%02x%02x' % colour_tuple
@@ -903,12 +938,12 @@ class App1:
         """changes whether warning dialogs appear, also changes the text of the button"""
         if settings.show_error_messages:
             settings.show_error_messages = False
-            self.warning.configure(text="Turn on warning dialogs")
+            self.button_warning.configure(text="Turn on warning dialogs")
             messagebox.showinfo("Warning dialogs", "Dialogs like this one will no longer be displayed unless necessary",
                                 parent=self.master)
         elif not settings.show_error_messages:
             settings.show_error_messages = True
-            self.warning.configure(text="Turn off warning dialogs")
+            self.button_warning.configure(text="Turn off warning dialogs")
             messagebox.showinfo("Warning dialogs", "Dialogs like this one will now always be displayed",
                                 parent=self.master)
         self.saved = False
@@ -932,9 +967,9 @@ class App1:
     def is_saved(self):
         """returns whether settings are saved AND changes button colour"""
         if self.saved:
-            self.settings_save.configure(bg=settings.fg_colour, fg=settings.bg_colour)
+            self.button_settings_save.configure(bg=settings.fg_colour, fg=settings.bg_colour)
         else:
-            self.settings_save.configure(bg="red", fg=settings.fg_colour)
+            self.button_settings_save.configure(bg="red", fg=settings.fg_colour)
         return self.saved
 
     def ask_save(self):
@@ -950,6 +985,28 @@ class App1:
         if question is False:
             self.master.destroy()
             return
+
+    def add_key(self) -> bool:
+        """
+        Compares the key from the entry field with the valid ones using the comparision of hashes.
+        :return: bool if key was successfully added
+        """
+        if len(self.entry_key.get()) == 0:  # if field it empty do nothing
+            return False
+
+        entry = self.entry_key.get()  # Get entry
+
+        if settings.full_version(entry):  # return true if key is valid
+            settings.key = entry  # Updates the key in the settings
+            self.save_settings()  # saves the settings
+            messagebox.showinfo("Valid Key", "The key you entered is valid.\n"
+                                             "The full version of the app is now accessible", parent=self.master)
+            return True
+
+        messagebox.showinfo("Invalid Key", "The key you entered does not match any valid key. \n\n"
+                                           "If you believe this is an error reach out to:\nkjell@nyberg.dev",
+                            parent=self.master)
+        return False
 
 
 # ------------------------------------------------------------------------------------------------------------- Info app
@@ -974,6 +1031,9 @@ if __name__ == "__main__":
     root0.protocol("WM_DELETE_WINDOW", app0.ask_save)
     root0.resizable(0, 0)
     root0.mainloop()
-# --------------------------------------------------------------------------------------------------------- save changes
+# ------------------------------------------------------------------------------------------------------------------TODO
+# TODO: when restoring settings the session button does not change
+# TODO: settings.first_time_opened
+
 
 sys.exit()

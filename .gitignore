@@ -19,3 +19,5 @@ vcruntime140.dll
 .idea/misc.xml
 .idea/encodings.xml
 .idea/dictionaries/isaknyberg.xml
+kivy_reamake.py
+Hashes.txt
