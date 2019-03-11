@@ -213,7 +213,7 @@ class Settings:
         self.key = 'key'
         # ------------- dynamic non editable
         self.windows = platform.system() == 'Windows'
-        self.space = 26 if self.windows else 28
+        self.space = 26 if self.windows else 29
         self.font_size = 12 if self.windows else 16
         self.settings_load_error = False  # if True it triggers a popup box when app0 is launched
         # ------------- Static non editable
@@ -303,7 +303,7 @@ class Settings:
         self.paused_rows = 12
         self.last_save = 0
         self.windows = platform.system() == 'Windows'
-        self.space = 26 if self.windows else 26
+        self.space = 26 if self.windows else 28
         self.font_size = 12 if self.windows else 16
         self.divide_character = u"\u00A0"  # setting '·'   MAC:' '   '-'   '—'   '…'   '_' win:u"\u00A0"
         self.app_font = ('Courier New', self.font_size)
@@ -411,12 +411,16 @@ class App0:
 
         fg = settings.fg_colour
         bg = settings.bg_colour
+        bg2 = settings.bg2_colour
         app_font = settings.app_font
         ongoing_rows = settings.ongoing_rows
         paused_rows = settings.paused_rows
-        '''bg2 = settings.bg2_colour  # not used but may be at some point
-        divide_character = settings.divide_character  # not used but may be at some point
-        session = settings.session  # to do'''
+        self.options_button = {"bg": bg2, "fg": fg, "pady": 0, "padx": 2, "borderwidth": 1, "relief": 'flat',
+                               "activebackground": fg, "activeforeground": bg}
+        self.options_listbox = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": 'sunken',
+                                "selectbackground": fg, "selectforeground": bg}
+        self.options_frame = {"bg": bg, "fg": fg, "borderwidth": 0, "relief": 'flat'}
+        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": 'sunken'}
 
         self.master = master
         self.frame = Frame(master)
@@ -425,17 +429,17 @@ class App0:
         self.master.title('Work Times')
         self.master.tk_setPalette(background=bg, fg=fg)
 
-        self.save_button = Button(self.frame, text="Save", command=self.save, bg=fg, fg=bg)
+        self.save_button = Button(self.frame, text="Save", command=self.save)
         self.save_button.grid(row=0, column=0)
-        self.sort_abc_button = Button(self.frame, text="Sort Abc", command=self.sort_abc, bg=fg, fg=bg)
+        self.sort_abc_button = Button(self.frame, text="Sort Abc", command=self.sort_abc)
         self.sort_abc_button.grid(row=0, column=1)
-        self.sort_time_button = Button(self.frame, text="Sort Time", command=self.sort_time, bg=fg, fg=bg)
+        self.sort_time_button = Button(self.frame, text="Sort Time", command=self.sort_time)
         self.sort_time_button.grid(row=0, column=2)
-        self.start_stop_button = Button(self.frame, text="Start|Stop", command=self.start_stop, bg=fg, fg=bg)
+        self.start_stop_button = Button(self.frame, text="Start|Stop", command=self.start_stop)
         self.start_stop_button.grid(row=0, column=3)
-        self.refresh_button = Button(self.frame, text="⚙", command=self.open_settings, bg=fg, fg=bg)
+        self.refresh_button = Button(self.frame, text="⚙", command=self.open_settings)
         self.refresh_button.grid(row=0, column=5)
-        self.add_button = Button(self.frame, text="Add", command=self.add, bg=fg, fg=bg)
+        self.add_button = Button(self.frame, text="Add", command=self.add)
         self.add_button.grid(row=1, column=5)
         self.entry_label = Label(self.frame, text="New Task:", bg=bg, fg=fg)
         self.entry_label.grid(row=1, column=0)
@@ -454,9 +458,12 @@ class App0:
         self.paused = Listbox(self.paused_frame, bg=bg, fg=fg, height=paused_rows, font=app_font)
         self.paused.grid(sticky=E + W + S + N)
 
-        self.front = [self.save_button, self.sort_abc_button, self.start_stop_button, self.sort_time_button,
-                      self.refresh_button, self.add_button]
-        self.back = [self.entry, self.ongoing, self.paused, self.ongoing_frame, self.paused_frame, self.entry_label]
+        self.all_button = [self.save_button, self.start_stop_button, self.sort_time_button,
+                           self.refresh_button, self.add_button, self.sort_abc_button]
+        self.all_frame = [self.ongoing_frame, self.paused_frame]
+        self.all_entry = [self.entry]
+        self.all_label = [self.entry_label]
+        self.all_listbox = [self.ongoing, self.paused]
 
         # ------------------------------------------------------------------------------------ Failed to import settings
         if settings.settings_load_error:
@@ -561,8 +568,14 @@ class App0:
                 paused_bg1, paused_bg2 = paused_bg2, paused_bg1
 
         self.master.tk_setPalette(background=settings.bg_colour, fg=settings.fg_colour)
-        for widget in self.front:
-            widget.configure(bg=settings.fg_colour, fg=settings.bg_colour)
+        for widget in self.all_button:
+            widget.configure(self.options_button)
+        for widget in self.all_listbox:
+            widget.configure(self.options_listbox)
+        for widget in self.all_frame:
+            widget.configure(self.options_frame)
+        for widget in self.all_entry:
+            widget.configure(self.options_entry)
         self.is_saved()
 
     def open_settings(self):
@@ -577,7 +590,7 @@ class App0:
     def save(self):
         """
         Saves the worktasks
-        :return:
+        :return: None
         """
         if self.worktasks.is_ongoing():
             if settings.show_error_messages:
@@ -593,12 +606,11 @@ class App0:
         :return: bool if project is saved
         """
         if self.saved and not self.worktasks.is_ongoing():
-            self.save_button.configure(bg=settings.fg_colour, fg=settings.bg_colour)
+            self.save_button.configure(self.options_button)
         else:
-            self.save_button.configure(bg="red", fg=settings.fg_colour)
+            self.save_button.configure(bg='#c21234', fg=settings.fg_colour)
 
         self.saved = self.saved and not self.worktasks.is_ongoing()
-
         return self.saved
 
     def ask_save(self):
@@ -609,6 +621,7 @@ class App0:
         if self.is_saved():
             root0.destroy()
             return
+        self.save_button.flash()
         question = messagebox.askyesnocancel("Save", "Do you want to save before you exit?")
         if question is True:
             self.worktasks.save()
@@ -649,7 +662,7 @@ class App0:
             messagebox.showerror("Full Version required",
                                  "Please activate the full version in the settings window, or reach out to:\n"
                                  "kjell@nyberg.dev\n"
-                                 "To obtain a key",
+                                 "To obtain a key.",
                                  parent=self.master)
             return False
         task = Task(task_name)  # Creates new task
@@ -731,59 +744,59 @@ class App1:
         m = {True: "Turn off warning dialogs", False: "Turn on warning dialogs"}
         n = {True: "Show total", False: "Show this session"}
 
-        self.label_show_session = Label(self.frame, text="Sessions:", justify=LEFT, bg=bg, fg=fg)
-        self.label_show_session.grid(row=0, column=0)
-        self.button_show_session = Button(self.frame, text=n[session], command=self.show_session, width=20, bg=fg, fg=bg)
+        self.label_show_session = LabelFrame(self.frame, text="Sessions:", bg=bg, fg=fg)
+        self.label_show_session.grid(row=0, column=0, columnspan=2)
+        self.button_show_session = Button(self.label_show_session, text=n[session], command=self.show_session, width=20, bg=fg, fg=bg)
         self.button_show_session.grid(row=1, column=0, pady=3, padx=1)
-        self.button_new_session = Button(self.frame, text="Start new session", command=self.new_session, width=20, bg=fg, fg=bg)
+        self.button_new_session = Button(self.label_show_session, text="Start new session", command=self.new_session, width=20, bg=fg, fg=bg)
         self.button_new_session.grid(row=1, column=1, pady=3, padx=1)
 
-        self.label_appearance_and_usage = Label(self.frame, text="Appearance and usage:", bg=bg, fg=fg)
-        self.label_appearance_and_usage.grid(row=2, column=0)
-        self.label_value = Label(self.frame, text="Value", bg=bg, fg=fg)
-        self.label_value.grid(row=2, column=1)
-        self.button_text_colour = Button(self.frame, text="Change text colour", command=self.fg_colour, width=20, bg=fg, fg=bg)
+        self.label_appearance_and_usage = LabelFrame(self.frame, text="Appearance and usage:", bg=bg, fg=fg)
+        self.label_appearance_and_usage.grid(row=2, column=0,  columnspan=2)
+        # self.label_value = Label(self.label_appearance_and_usage, text="Value", bg=bg, fg=fg)
+        # self.label_value.grid(row=2, column=1)
+        self.button_text_colour = Button(self.label_appearance_and_usage, text="Change text colour", command=self.fg_colour, width=20, bg=fg, fg=bg)
         self.button_text_colour.grid(row=3, column=0, pady=3, padx=1)
-        self.entry_fg = Entry(self.frame)
+        self.entry_fg = Entry(self.label_appearance_and_usage)
         self.entry_fg.grid(row=3, column=1, columnspan=2)
-        self.button_app_colour = Button(self.frame, text="Change app colour", command=self.bg_colour, width=20, bg=fg, fg=bg)
+        self.button_app_colour = Button(self.label_appearance_and_usage, text="Change app colour", command=self.bg_colour, width=20, bg=fg, fg=bg)
         self.button_app_colour.grid(row=4, column=0, pady=3, padx=1)
-        self.entry_bg = Entry(self.frame)
+        self.entry_bg = Entry(self.label_appearance_and_usage)
         self.entry_bg.grid(row=4, column=1, columnspan=2)
-        self.button_app2_colour = Button(self.frame, text="Change app 2nd colour", command=self.bg2_colour, width=20, bg=fg, fg=bg)
+        self.button_app2_colour = Button(self.label_appearance_and_usage, text="Change app 2nd colour", command=self.bg2_colour, width=20, bg=fg, fg=bg)
         self.button_app2_colour.grid(row=5, column=0, pady=3, padx=1)
-        self.entry_bg2 = Entry(self.frame)
+        self.entry_bg2 = Entry(self.label_appearance_and_usage)
         self.entry_bg2.grid(row=5, column=1, columnspan=2)
-        self.button_ongoing_rows = Button(self.frame, text="Change Ongoing tasks rows", command=self.set_ongoing_rows, width=20, bg=fg, fg=bg)
+        self.button_ongoing_rows = Button(self.label_appearance_and_usage, text="Change Ongoing tasks rows", command=self.set_ongoing_rows, width=20, bg=fg, fg=bg)
         self.button_ongoing_rows.grid(row=6, column=0, pady=3, padx=1)
-        self.entry_ongoing_rows = Entry(self.frame)
+        self.entry_ongoing_rows = Entry(self.label_appearance_and_usage)
         self.entry_ongoing_rows.grid(row=6, column=1, columnspan=2)
-        self.button_paused_rows = Button(self.frame, text="Change Paused tasks rows", command=self.set_paused_rows, width=20, bg=fg, fg=bg)
+        self.button_paused_rows = Button(self.label_appearance_and_usage, text="Change Paused tasks rows", command=self.set_paused_rows, width=20, bg=fg, fg=bg)
         self.button_paused_rows.grid(row=7, column=0, pady=3, padx=1)
-        self.entry_paused_rows = Entry(self.frame)
+        self.entry_paused_rows = Entry(self.label_appearance_and_usage)
         self.entry_paused_rows.grid(row=7, column=1, columnspan=2)
-        self.button_warning = Button(self.frame, text=m[settings.show_error_messages], command=self.warning_dialog, width=20, bg=fg, fg=bg)
+        self.button_warning = Button(self.label_appearance_and_usage, text=m[settings.show_error_messages], command=self.warning_dialog, width=20, bg=fg, fg=bg)
         self.button_warning.grid(row=9, column=0, pady=3, padx=1)
 
-        self.label_info_save = Label(self.frame, text="Info, Save, Remove task and Restore Settings:", bg=bg, fg=fg)
+        self.label_info_save = LabelFrame(self.frame, text="Info, Save, Remove task and Restore Settings:", bg=bg, fg=fg)
         self.label_info_save.grid(row=10, column=0,  columnspan=2)
-        self.button_settings_save = Button(self.frame, text="Save settings", command=self.save_settings, bg=fg, width=20, fg=bg)
+        self.button_settings_save = Button(self.label_info_save, text="Save settings", command=self.save_settings, bg=fg, width=20, fg=bg)
         self.button_settings_save.grid(row=11, column=0, pady=3, padx=1)
-        self.button_restore_setting = Button(self.frame, text="Restore default settings", command=self.restore, width=20, bg=fg, fg=bg)
+        self.button_restore_setting = Button(self.label_info_save, text="Restore default settings", command=self.restore, width=20, bg=fg, fg=bg)
         self.button_restore_setting.grid(row=11, column=1, pady=3, padx=1)
-        self.button_show_info = Button(self.frame, text="Show Info help and license", command=self.show_info, width=20, bg=fg, fg=bg)
+        self.button_show_info = Button(self.label_info_save, text="Show Info help and license", command=self.show_info, width=20, bg=fg, fg=bg)
         self.button_show_info.grid(row=12, column=0, pady=3, padx=1)
-        self.button_remove_task = Button(self.frame, text="Remove selected task", command=self.remove_task, width=20, bg=fg, fg=bg)
+        self.button_remove_task = Button(self.label_info_save, text="Remove selected task", command=self.remove_task, width=20, bg=fg, fg=bg)
         self.button_remove_task.grid(row=12, column=1, pady=3, padx=1)
 
-        self.label_license = Label(self.frame, text="License:", bg=bg, fg=fg)
-        self.label_license.grid(row=13, column=0, columnspan=1)
-        self.label_key = Label(self.frame, text="Key", bg=bg, fg=fg)
-        self.label_key.grid(row=13, column=1, columnspan=1)
-        self.button_add_key = Button(self.frame, text="Enter Key:", command=self.add_key, bg=fg, width=20,fg=bg)
+        self.label_license = LabelFrame(self.frame, text="License:", bg=bg, fg=fg)
+        self.label_license.grid(row=13, column=0)
+        # self.label_key = Label(self.frame, text="Key", bg=bg, fg=fg)
+        # self.label_key.grid(row=13, column=1)
+        self.button_add_key = Button(self.label_license, text="Enter Key:", command=self.add_key, bg=fg, width=20, fg=bg)
         self.button_add_key.grid(row=14, column=0, pady=3, padx=1)
-        self.entry_key = Entry(self.frame)
-        self.entry_key.grid(row=14, column=1, columnspan=2)
+        self.entry_key = Entry(self.label_license)
+        self.entry_key.grid(row=14, column=1)
 
     # --------------------------------------------------------------------------------------------- App1 class functions
 
@@ -977,6 +990,7 @@ class App1:
         if self.is_saved():
             self.master.destroy()
             return
+        self.button_settings_save.flash()
         question = messagebox.askyesnocancel("Save", "Do you want to save the settings before you close the window?")
         if question is True:
             self.save_settings()
@@ -1031,9 +1045,13 @@ if __name__ == "__main__":
     root0.protocol("WM_DELETE_WINDOW", app0.ask_save)
     root0.resizable(0, 0)
     root0.mainloop()
+
 # ------------------------------------------------------------------------------------------------------------------TODO
 # TODO: when restoring settings the session button does not change
 # TODO: settings.first_time_opened
-
+# TODO: make the settings windows not resizable
+# TODO: app0.update vs app0.theme_update
+# TODO: Themes
+# TODO: app1 appearance update
 
 sys.exit()
