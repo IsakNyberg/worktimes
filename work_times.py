@@ -206,7 +206,6 @@ class Task:
 
 # ------------------------------------------------------------------------------------------------------- Settings class
 class Settings:
-
     def __init__(self):
         """
         Initialises all settings variables and paths
@@ -221,6 +220,7 @@ class Settings:
         self.session = False
         self.last_save = 0
         self.key = 'key'
+        self.theme = 'default'  # TODO
         # ------------- dynamic non editable
         self.windows = platform.system() == 'Windows'
         self.space = 26 if self.windows else 29
@@ -232,6 +232,7 @@ class Settings:
         self.path_settings = ""
         self.path_info = ""
         self.path_icon = ""
+        self.path = ""
         # ------------- init methods
         self.set_filepaths()
         self.load_info()
@@ -296,7 +297,7 @@ class Settings:
         return ('bg-colour_' + str(self.bg_colour) + '\nbg2-colour_' + str(self.bg2_colour) + '\nfg-colour_' +
                 str(self.fg_colour) + '\nshow-error-messages_' + str(self.show_error_messages) + '\nongoing-rows_' +
                 str(self.ongoing_rows) + '\npaused-rows_' + str(self.paused_rows) + '\nlast-save_' +
-                str(self.last_save) + '\nfont-size_' + str(self.font_size) + '\nsession_' + str(self.session) +
+                str(self.last_save) + '\ntheme_' + str(self.theme) + '\nsession_' + str(self.session) +
                 '\nKey_' + str(self.key))
 
     def default_settings(self):
@@ -318,6 +319,7 @@ class Settings:
         self.divide_character = u"\u00A0"  # setting '·'   MAC:' '   '-'   '—'   '…'   '_' win:u"\u00A0"
         self.app_font = ('Courier New', self.font_size)
         self.key = self.key  # should change
+        self.theme = 'default'
 
     def set_filepaths(self):
         """
@@ -326,8 +328,10 @@ class Settings:
         """
         if getattr(sys, 'frozen', False):  # frozen
             dir_ = os.path.dirname(sys.executable)
+            self.path = dir_
         else:  # unfrozen
             dir_ = os.path.dirname(os.path.realpath(__file__))
+            self.path = dir_
         if self.windows:  # windows or mac
             self.path_data = os.path.join(os.path.dirname(dir_), "worktimes\\data.txt")
             self.path_settings = os.path.join(os.path.dirname(dir_), "worktimes\\settings.rfe")
@@ -368,15 +372,16 @@ class Settings:
             self.ongoing_rows = int(load[4][1])
             self.paused_rows = int(load[5][1])
             self.last_save = int(load[6][1])
-            # self.font_size = int(load[7][1]) DON'T USE This was a stupid option to change, should be based on platform
+            self.theme = load[7][1]
             self.session = load[8][1] == "True"  # == True so that if file is corrupt it returns False
             self.key = load[9][1]
+
 
             colours = [self.bg_colour, self.bg2_colour, self.fg_colour]
             if any((len(colour) != 7 or colour[0] != '#') for colour in colours):
                 raise ValueError  # checking if all colours are hexadecimal #ff0011
 
-        except (FileNotFoundError, UnicodeDecodeError, ValueError):
+        except (FileNotFoundError, UnicodeDecodeError, ValueError, IndexError):
             self.default_settings()
             self.settings_load_error = True
 
@@ -412,32 +417,76 @@ class Settings:
         return settings_match or entry_match
 
 
-# ------------------------------------------------------------------------------------------------------- Work Times app
-class App0:
-    def __init__(self, master):
-        self.sorted = 'random'
-        self.saved = True
-        self.worktasks = TaskList()
+# ---------------------------------------------------------------------------------------------------------- Theme Class
+class Theme():
+    def __init__(self, theme_name='default'):
+        if theme_name not in ['default', 'red']:  # list of themes
+            theme_name = 'default'
+            print(123123)
+        self.theme_name = theme_name
+        print(theme_name)
+        if settings.windows:  # windows or mac
+            self.path_theme = os.path.join(os.path.dirname(settings.path), "worktimes\\themes\\"+theme_name+".txt")
+        else:
+            self.path_theme = os.path.join(os.path.dirname(settings.path), "worktimes/themes/"+theme_name+".txt")
+        theme = []
+        try:
+            with open(self.path_theme, 'r') as theme_file:
+                for line in theme_file:
+                    theme.append(line.rstrip())
+            self.options_button = eval(theme[0])
+            self.options_button_red = eval(theme[1])
+            self.options_listbox = eval(theme[2])
+            self.options_frame = eval(theme[3])
+            self.options_entry = eval(theme[4])
+            self.options_label = eval(theme[5])
+            self.options_label_frame = eval(theme[6])
+            self.options_palette = eval(theme[7])
 
-        fg = settings.fg_colour
-        bg = settings.bg_colour
-        bg2 = settings.bg2_colour
-        app_font = settings.app_font
-        ongoing_rows = settings.ongoing_rows
-        paused_rows = settings.paused_rows
+        except KeyboardInterrupt:#(FileNotFoundError, UnicodeDecodeError, ValueError, SyntaxError):
+            self.theme_default()
+
+    def theme_default(self):
+        fg = '#ffffff'
+        bg = '#007fc2'
+        bg2 = '#006cb2'
+        red = '#c21234'
         self.options_button = {"bg": bg2, "fg": fg, "pady": 0, "padx": 2, "borderwidth": 1, "relief": 'flat',
+                               "activebackground": fg, "activeforeground": bg}
+        self.options_button_red = {"bg": red, "fg": fg, "pady": 0, "padx": 2, "borderwidth": 1, "relief": 'flat',
                                "activebackground": fg, "activeforeground": bg}
         self.options_listbox = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": 'sunken',
                                 "selectbackground": fg, "selectforeground": bg}
         self.options_frame = {"bg": bg, "fg": fg, "borderwidth": 0, "relief": 'flat'}
         self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": 'sunken'}
 
+
+# ------------------------------------------------------------------------------------------------------- Work Times app
+class App0:
+    def __init__(self, master):
+        self.sorted = 'random'
+        self.saved = True
+        self.worktasks = TaskList()
+        app_font = settings.app_font
+        ongoing_rows = settings.ongoing_rows
+        paused_rows = settings.paused_rows
+        self.theme = Theme(settings.theme)
+
+        self.options_button = self.theme.options_button
+        self.options_button_red = self.theme.options_button_red
+        self.options_listbox = self.theme.options_listbox
+        self.options_frame = self.theme.options_frame
+        self.options_entry = self.theme.options_entry
+        self.options_label = self.theme.options_label
+        self.options_label_frame = self.theme.options_label_frame
+        self.options_palette = self.theme.options_palette
+
         self.master = master
         self.frame = Frame(master)
-        self.frame.pack(fill=BOTH, expand=1, padx=5, pady=5)
+        self.frame.pack(fill=BOTH, expand=1, padx=0, pady=0)
         self.master.iconbitmap(settings.path_icon)
         self.master.title('Work Times')
-        self.master.tk_setPalette(background=bg, fg=fg)
+        self.master.tk_setPalette(background=self.options_palette["bg"], foreground=self.options_palette["fg"])
 
         self.save_button = Button(self.frame, text="Save", command=self.save)
         self.save_button.grid(row=0, column=0)
@@ -451,29 +500,30 @@ class App0:
         self.refresh_button.grid(row=0, column=5)
         self.add_button = Button(self.frame, text="Add", command=self.add)
         self.add_button.grid(row=1, column=5)
-        self.entry_label = Label(self.frame, text="New Task:", bg=bg, fg=fg)
+        self.entry_label = Label(self.frame, text="New Task:")
         self.entry_label.grid(row=1, column=0)
         self.entry = Entry(self.frame)
         self.entry.grid(row=1, column=1, columnspan=4, sticky=E + W)
 
-        self.ongoing_frame = LabelFrame(self.frame, text="Ongoing", bg=bg, fg=fg)
-        self.ongoing_frame.grid(columnspan=6, sticky=E + W + S + N)
-        self.ongoing_frame.columnconfigure(0, weight=1)
-        self.ongoing = Listbox(self.ongoing_frame, bg=bg, fg=fg, height=ongoing_rows, font=app_font)
+        self.ongoing_label_frame = LabelFrame(self.frame, text="Ongoing")
+        self.ongoing_label_frame.grid(columnspan=6, sticky=E + W + S + N)
+        self.ongoing_label_frame.columnconfigure(0, weight=1)
+        self.ongoing = Listbox(self.ongoing_label_frame, height=ongoing_rows, font=app_font)
         self.ongoing.grid(sticky=E + W + S + N)
 
-        self.paused_frame = LabelFrame(self.frame, text="Paused", bg=bg, fg=fg)
-        self.paused_frame.grid(columnspan=6, sticky=E + W + S + N)
-        self.paused_frame.columnconfigure(0, weight=1)
-        self.paused = Listbox(self.paused_frame, bg=bg, fg=fg, height=paused_rows, font=app_font)
+        self.paused_label_frame = LabelFrame(self.frame, text="Paused")
+        self.paused_label_frame.grid(columnspan=6, sticky=E + W + S + N)
+        self.paused_label_frame.columnconfigure(0, weight=1)
+        self.paused = Listbox(self.paused_label_frame, height=paused_rows, font=app_font)
         self.paused.grid(sticky=E + W + S + N)
 
         self.all_button = [self.save_button, self.start_stop_button, self.sort_time_button,
                            self.refresh_button, self.add_button, self.sort_abc_button]
-        self.all_frame = [self.ongoing_frame, self.paused_frame]
+        self.all_frame = [self.frame]
         self.all_entry = [self.entry]
         self.all_label = [self.entry_label]
         self.all_listbox = [self.ongoing, self.paused]
+        self.all_label_frame = [self.paused_label_frame, self.ongoing_label_frame]
 
         # ---------------------------------------------------------------------------------------------- Startup Methods
 
@@ -579,6 +629,11 @@ class App0:
             widget.configure(self.options_frame)
         for widget in self.all_entry:
             widget.configure(self.options_entry)
+        for widget in self.all_label:
+            widget.configure(self.options_label)
+        for widget in self.all_label_frame:
+            widget.configure(self.options_label_frame)
+        self.is_saved()
         self.update()
 
     def open_settings(self):
@@ -612,7 +667,7 @@ class App0:
         if self.saved and not self.worktasks.is_ongoing():
             self.save_button.configure(self.options_button)
         else:
-            self.save_button.configure(bg='#c21234', fg=settings.fg_colour)
+            self.save_button.configure(self.options_button_red)
 
         self.saved = self.saved and not self.worktasks.is_ongoing()
         return self.saved
@@ -1073,9 +1128,12 @@ if __name__ == "__main__":
 # ------------------------------------------------------------------------------------------------------------------TODO
 # TODO: when restoring settings the session button does not change
 # TODO: settings.first_time_opened
-# TODO: app0.update vs app0.theme_update
-# TODO: Themes
 # TODO: find a clever way of saving the appearance
 # TODO: change colour settings
+# TODO: documentation for the theme class
+# TODO: finish class theme
+# TODO: update info file
+# TODO: theme change in app1
+# TODO: the theme doesnt apply to the update function when coloring the elements in ListBox
 
 sys.exit()

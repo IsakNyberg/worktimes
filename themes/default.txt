@@ -1,0 +1,8 @@
+{"bg": "#006cb2", "fg": "#ffffff", "borderwidth": 1, "relief": "flat", "activebackground":"#ffffff", "activeforeground":"#007fc2", "pady": 0, "padx": 2}
+{"bg": "#c21234", "fg": "#ffffff", "borderwidth": 1, "relief": "flat", "activebackground":"#ffffff", "activeforeground":"#007fc2", "pady": 0, "padx": 2}
+{"bg": "#007fc2", "fg": "#ffffff", "borderwidth": 1, "relief": "sunken", "selectbackground":"#ffffff", "selectforeground":"#007fc2"}
+{"bg": "#007fc2", "borderwidth": 2, "relief": "flat"}
+{"bg": "#007fc2", "fg": "#ffffff", "borderwidth": 1, "relief": "sunken", "width": 21}
+{"bg": "#007fc2", "fg": "#ffffff", "borderwidth": 1, "relief": "flat"}
+{"bg": "#007fc2", "fg": "#ffffff", "borderwidth": 0, "relief": "flat"}
+{"bg": "#007fc2", "fg": "#ffffff"}
