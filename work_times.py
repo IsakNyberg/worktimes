@@ -99,6 +99,16 @@ class TaskList:
             saveFile.write(write)  # puts massive string in file
         settings.last_save = int(time.time())
 
+    def import_tasks(self):
+        with open(settings.path_data) as file:  # load tasks
+            for line in file:
+                split_line = line.rstrip().split("_")
+                try:
+                    self.append_task(Task(split_line[0], int(split_line[1]), int(split_line[2])))
+                except IndexError:
+                    # this is triggered then the save file is in the old format and then the new file is updates
+                    self.append_task(Task(split_line[0], int(split_line[1]), 0))
+
 
 # ----------------------------------------------------------------------------------------------------------- Task class
 class Task:
@@ -465,8 +475,19 @@ class App0:
         self.all_label = [self.entry_label]
         self.all_listbox = [self.ongoing, self.paused]
 
+        # ---------------------------------------------------------------------------------------------- Startup Methods
+
+        self.startup()
+        self.clock()
+        self.full_update()
+
+    def startup(self):
+        """
+        This function is only here so i can minimize it in PyCharm
+        :return: None or raises errors
+        """
         # ------------------------------------------------------------------------------------ Failed to import settings
-        if settings.settings_load_error:
+        if settings.settings_load_error:  # settings need to be loaded before this point
             self.master.update()
             messagebox.showerror("Settings file corrupt",
                                  "The settings file could not be read due to unexpected character or format\n"
@@ -475,50 +496,27 @@ class App0:
                                  parent=self.master)
 
         # ------------------------------------------------------------------------------------------------- Import Tasks
-        try:
-            with open(settings.path_data) as file:  # load tasks
-                for line in file:
-                    split_line = line.rstrip().split("_")
-                    try:
-                        self.worktasks.append_task(Task(split_line[0], int(split_line[1]), int(split_line[2])))
-                    except IndexError:
-                        # this is triggered then the save file is in the old format and then the new file is updates
-                        self.worktasks.append_task(Task(split_line[0], int(split_line[1]), 0))
-
+        try:  # this method needs to be in app0
+            self.worktasks.import_tasks()
+            return
         except FileNotFoundError:
-
             create_new_savefile = messagebox.askyesno("Save data not found",
                                                       "The data file was not found, do you wish to make a new one?\n"
-                                                      "This will cause any previous data to be lost.",
-                                                      parent=self.master)
-            if create_new_savefile:
-                self.worktasks.save()
-            else:
-                messagebox.showerror("Please review save file",
-                                     "Please review the data.txt in order to prevent data loss.\n"
-                                     "Program will exit.",
-                                     parent=self.master)
-            quit()
-
-        except:  # when fails to load tasks, program closes in order to make sure that the previous data isn't lost.
+                                                      "This will cause any previous data to be lost.")
+        except (UnicodeDecodeError, ValueError, IndexError):
+            # when fails to load tasks, program closes in order to make sure that the previous data isn't lost.
             create_new_savefile = messagebox.askyesno("Save file corrupt",
                                                       "Could not read save file due to unexpected character "
                                                       "or formatting.\n" +
                                                       "do you wish to make a new one?\n"
                                                       "This will cause all previous data to be lost.")
-            self.update()
-            if create_new_savefile:
-                self.worktasks.save()
-
-            else:
-                messagebox.showerror("Please review save file",
-                                     "Please review the data.txt file in order to prevent data loss.\n\n"
-                                     "Program will exit.")
-            quit()
-        # ------------------------------------------------------------------------------------------------- Starts clock
-
-        self.clock()
-
+        if create_new_savefile:
+            self.worktasks.save()
+        else:
+            messagebox.showerror("Please review save file",
+                                 "Please review the data.txt file in order to prevent data loss.\n\n"
+                                 "Program will exit.")
+        quit()
         # -------------------------------------------------------------------------------------------- First time prompt
         if len(self.worktasks) + settings.last_save == 0:  # if no tasks and have never been saved generate greeting
             self.master.update()
@@ -566,8 +564,13 @@ class App0:
                 self.paused.insert(END, task.displaytext())
                 self.paused.itemconfig(END, {'bg': paused_bg1})
                 paused_bg1, paused_bg2 = paused_bg2, paused_bg1
+        self.is_saved()
 
-        self.master.tk_setPalette(background=settings.bg_colour, fg=settings.fg_colour)
+    def full_update(self):
+        """
+        Fully updates all parts of app0 to fix colours and appearance while also calling
+        :return: None
+        """
         for widget in self.all_button:
             widget.configure(self.options_button)
         for widget in self.all_listbox:
@@ -576,7 +579,7 @@ class App0:
             widget.configure(self.options_frame)
         for widget in self.all_entry:
             widget.configure(self.options_entry)
-        self.is_saved()
+        self.update()
 
     def open_settings(self):
         """
@@ -586,6 +589,7 @@ class App0:
         self.settings_window = Toplevel(self.master)
         self.app1 = App1(self.settings_window)
         self.settings_window.protocol("WM_DELETE_WINDOW", self.app1.ask_save)  # prompt when window is closed
+        self.settings_window.resizable(0, 0)
 
     def save(self):
         """
@@ -595,9 +599,9 @@ class App0:
         if self.worktasks.is_ongoing():
             if settings.show_error_messages:
                 messagebox.showerror("Save error", "Cannot save if one or more tasks are ongoing.", parent=self.master)
-        self.update()
         self.worktasks.save()
         self.saved = True
+        self.update()
         self.is_saved()
 
     def is_saved(self):
@@ -721,6 +725,7 @@ class App0:
     def show_info(self):
         self.info_window = Toplevel(self.master)
         self.app2 = App2(self.info_window)
+        self.info_window.resizable(0, 0)
 
 
 # --------------------------------------------------------------------------------------------------------- Settings app
@@ -728,77 +733,97 @@ class App1:
     def __init__(self, master):
 
         self.master = master
-        self.frame = Frame(master)
+        self.frame = Frame(master, borderwidth=1)
         self.frame.grid()
         self.master.iconbitmap(settings.path_icon)
         self.master.title("Settings")
         self.saved = True
         fg = settings.fg_colour
         bg = settings.bg_colour
-        '''bg2 = settings.bg2_colour  # not used but may be at some point
-        app_font = settings.app_font
-        ongoing_rows = settings.ongoing_rows
-        paused_rows = settings.paused_rows
-        divide_character = settings.divide_character  # not used but may be at some point'''
+        bg2 = settings.bg2_colour
+        self.options_button = {"bg": bg2, "fg": fg, "pady": 3, "padx": 1, "borderwidth": 1, "relief": 'flat',
+                               "activebackground": fg, "activeforeground": bg, "width": 20}
+        self.options_label_frame = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": 'raised'}
+        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": 'sunken', "width": 19}
+
         session = settings.session  # this is a static variable, it is not a mistake
         m = {True: "Turn off warning dialogs", False: "Turn on warning dialogs"}
         n = {True: "Show total", False: "Show this session"}
 
         self.label_show_session = LabelFrame(self.frame, text="Sessions:", bg=bg, fg=fg)
         self.label_show_session.grid(row=0, column=0, columnspan=2)
-        self.button_show_session = Button(self.label_show_session, text=n[session], command=self.show_session, width=20, bg=fg, fg=bg)
-        self.button_show_session.grid(row=1, column=0, pady=3, padx=1)
-        self.button_new_session = Button(self.label_show_session, text="Start new session", command=self.new_session, width=20, bg=fg, fg=bg)
-        self.button_new_session.grid(row=1, column=1, pady=3, padx=1)
+        self.button_show_session = Button(self.label_show_session, text=n[session], command=self.show_session)
+        self.button_show_session.grid(row=1, column=0)
+        self.button_new_session = Button(self.label_show_session, text="Start new session", command=self.new_session)
+        self.button_new_session.grid(row=1, column=1)
 
-        self.label_appearance_and_usage = LabelFrame(self.frame, text="Appearance and usage:", bg=bg, fg=fg)
+        self.label_appearance_and_usage = LabelFrame(self.frame, text="Appearance and usage:")
         self.label_appearance_and_usage.grid(row=2, column=0,  columnspan=2)
         # self.label_value = Label(self.label_appearance_and_usage, text="Value", bg=bg, fg=fg)
         # self.label_value.grid(row=2, column=1)
-        self.button_text_colour = Button(self.label_appearance_and_usage, text="Change text colour", command=self.fg_colour, width=20, bg=fg, fg=bg)
-        self.button_text_colour.grid(row=3, column=0, pady=3, padx=1)
+        self.button_text_colour = Button(self.label_appearance_and_usage, text="Change text colour", command=self.fg_colour)
+        self.button_text_colour.grid(row=3, column=0)
         self.entry_fg = Entry(self.label_appearance_and_usage)
         self.entry_fg.grid(row=3, column=1, columnspan=2)
-        self.button_app_colour = Button(self.label_appearance_and_usage, text="Change app colour", command=self.bg_colour, width=20, bg=fg, fg=bg)
-        self.button_app_colour.grid(row=4, column=0, pady=3, padx=1)
+        self.button_app_colour = Button(self.label_appearance_and_usage, text="Change app colour", command=self.bg_colour)
+        self.button_app_colour.grid(row=4, column=0)
         self.entry_bg = Entry(self.label_appearance_and_usage)
         self.entry_bg.grid(row=4, column=1, columnspan=2)
-        self.button_app2_colour = Button(self.label_appearance_and_usage, text="Change app 2nd colour", command=self.bg2_colour, width=20, bg=fg, fg=bg)
-        self.button_app2_colour.grid(row=5, column=0, pady=3, padx=1)
+        self.button_app2_colour = Button(self.label_appearance_and_usage, text="Change app 2nd colour", command=self.bg2_colour)
+        self.button_app2_colour.grid(row=5, column=0)
         self.entry_bg2 = Entry(self.label_appearance_and_usage)
         self.entry_bg2.grid(row=5, column=1, columnspan=2)
-        self.button_ongoing_rows = Button(self.label_appearance_and_usage, text="Change Ongoing tasks rows", command=self.set_ongoing_rows, width=20, bg=fg, fg=bg)
-        self.button_ongoing_rows.grid(row=6, column=0, pady=3, padx=1)
+        self.button_ongoing_rows = Button(self.label_appearance_and_usage, text="Change Ongoing tasks rows", command=self.set_ongoing_rows)
+        self.button_ongoing_rows.grid(row=6, column=0)
         self.entry_ongoing_rows = Entry(self.label_appearance_and_usage)
         self.entry_ongoing_rows.grid(row=6, column=1, columnspan=2)
-        self.button_paused_rows = Button(self.label_appearance_and_usage, text="Change Paused tasks rows", command=self.set_paused_rows, width=20, bg=fg, fg=bg)
-        self.button_paused_rows.grid(row=7, column=0, pady=3, padx=1)
+        self.button_paused_rows = Button(self.label_appearance_and_usage, text="Change Paused tasks rows", command=self.set_paused_rows)
+        self.button_paused_rows.grid(row=7, column=0)
         self.entry_paused_rows = Entry(self.label_appearance_and_usage)
         self.entry_paused_rows.grid(row=7, column=1, columnspan=2)
-        self.button_warning = Button(self.label_appearance_and_usage, text=m[settings.show_error_messages], command=self.warning_dialog, width=20, bg=fg, fg=bg)
-        self.button_warning.grid(row=9, column=0, pady=3, padx=1)
+        self.button_warning = Button(self.label_appearance_and_usage, text=m[settings.show_error_messages], command=self.warning_dialog)
+        self.button_warning.grid(row=9, column=0)
 
-        self.label_info_save = LabelFrame(self.frame, text="Info, Save, Remove task and Restore Settings:", bg=bg, fg=fg)
+        self.label_info_save = LabelFrame(self.frame, text="Info, Save, Remove task and Restore Settings:")
         self.label_info_save.grid(row=10, column=0,  columnspan=2)
-        self.button_settings_save = Button(self.label_info_save, text="Save settings", command=self.save_settings, bg=fg, width=20, fg=bg)
-        self.button_settings_save.grid(row=11, column=0, pady=3, padx=1)
-        self.button_restore_setting = Button(self.label_info_save, text="Restore default settings", command=self.restore, width=20, bg=fg, fg=bg)
-        self.button_restore_setting.grid(row=11, column=1, pady=3, padx=1)
-        self.button_show_info = Button(self.label_info_save, text="Show Info help and license", command=self.show_info, width=20, bg=fg, fg=bg)
-        self.button_show_info.grid(row=12, column=0, pady=3, padx=1)
-        self.button_remove_task = Button(self.label_info_save, text="Remove selected task", command=self.remove_task, width=20, bg=fg, fg=bg)
-        self.button_remove_task.grid(row=12, column=1, pady=3, padx=1)
+        self.button_settings_save = Button(self.label_info_save, text="Save settings", command=self.save_settings)
+        self.button_settings_save.grid(row=11, column=0)
+        self.button_restore_setting = Button(self.label_info_save, text="Restore default settings", command=self.restore)
+        self.button_restore_setting.grid(row=11, column=1)
+        self.button_show_info = Button(self.label_info_save, text="Show Info help and license", command=self.show_info)
+        self.button_show_info.grid(row=12, column=0)
+        self.button_remove_task = Button(self.label_info_save, text="Remove selected task", command=self.remove_task)
+        self.button_remove_task.grid(row=12, column=1)
 
-        self.label_license = LabelFrame(self.frame, text="License:", bg=bg, fg=fg)
+        self.label_license = LabelFrame(self.frame, text="License:")
         self.label_license.grid(row=13, column=0)
-        # self.label_key = Label(self.frame, text="Key", bg=bg, fg=fg)
+        # self.label_key = Label(self.frame, text="Key")
         # self.label_key.grid(row=13, column=1)
-        self.button_add_key = Button(self.label_license, text="Enter Key:", command=self.add_key, bg=fg, width=20, fg=bg)
-        self.button_add_key.grid(row=14, column=0, pady=3, padx=1)
+        self.button_add_key = Button(self.label_license, text="Enter Key:", command=self.add_key)
+        self.button_add_key.grid(row=14, column=0)
         self.entry_key = Entry(self.label_license)
         self.entry_key.grid(row=14, column=1)
 
+        self.all_button = [self.button_settings_save, self.button_add_key, self.button_app2_colour,
+                           self.button_app_colour, self.button_new_session, self.button_ongoing_rows,
+                           self.button_paused_rows, self.button_remove_task, self.button_restore_setting,
+                           self.button_show_info, self.button_show_session, self.button_text_colour,
+                           self.button_warning]
+        self.all_entry = [self.entry_key, self.entry_bg, self.entry_bg2, self.entry_fg, self.entry_ongoing_rows,
+                          self.entry_paused_rows]
+        self.all_label_frame = [self.label_license, self.label_show_session, self.label_appearance_and_usage,
+                                self.label_info_save]
+        self.full_update()
+
     # --------------------------------------------------------------------------------------------- App1 class functions
+    def full_update(self):
+        for widget in self.all_button:
+            widget.configure(self.options_button)
+        for widget in self.all_label_frame:
+            widget.configure(self.options_label_frame)
+        for widget in self.all_entry:
+            widget.configure(self.options_entry)
+        self.is_saved()
 
     @staticmethod
     def remove_task():
@@ -901,12 +926,11 @@ class App1:
                 raise ValueError
             bg = '#%02x%02x%02x' % colour_tuple
             settings.bg_colour = bg
-            root0.tk_setPalette(background=bg, fg=settings.fg_colour)
         except (TypeError, ValueError):
             messagebox.showerror("Change bg colour", "Colour must be in (R,G,B) format", parent=self.master)
         self.saved = False
         self.is_saved()
-        app0.update()
+        app0.full_update()
 
     def bg2_colour(self):
         """
@@ -982,7 +1006,7 @@ class App1:
         if self.saved:
             self.button_settings_save.configure(bg=settings.fg_colour, fg=settings.bg_colour)
         else:
-            self.button_settings_save.configure(bg="red", fg=settings.fg_colour)
+            self.button_settings_save.configure(bg='#c21234', fg=settings.fg_colour)
         return self.saved
 
     def ask_save(self):
@@ -1032,8 +1056,8 @@ class App2:
     def __init__(self, master):
         textbox = Text(master, height=28, width=40)
         textbox.pack()
-        for line in settings.info[:-1]:
-            textbox.insert(END, line + '\n')
+        for line in settings.info[:-1]:  # settings.info is a list of string that i want to display
+            textbox.insert(END, line + '\n')  # adds each element from the settings.info list to the widget
         textbox.insert(END, settings.info[-1])  # this is here so that there is no "\n" on the last line
 
 
@@ -1049,9 +1073,9 @@ if __name__ == "__main__":
 # ------------------------------------------------------------------------------------------------------------------TODO
 # TODO: when restoring settings the session button does not change
 # TODO: settings.first_time_opened
-# TODO: make the settings windows not resizable
 # TODO: app0.update vs app0.theme_update
 # TODO: Themes
-# TODO: app1 appearance update
+# TODO: find a clever way of saving the appearance
+# TODO: change colour settings
 
 sys.exit()
