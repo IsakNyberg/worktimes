@@ -211,9 +211,6 @@ class Settings:
         Initialises all settings variables and paths
         """
         # ------------- editable in App1
-        self.bg_colour = '#007fc2'  # hexadecimal
-        self.bg2_colour = '#006cb2'
-        self.fg_colour = '#ffffff'
         self.show_error_messages = True
         self.ongoing_rows = 4
         self.paused_rows = 12
@@ -250,30 +247,6 @@ class Settings:
         names = [attr for attr in vars(self) if not attr.startswith('__')]
         return str(string_settings[index] + ' : ' + names[index] for index in range(len(string_settings)))
 
-    def set_bg(self, colour: str):
-        """
-        Sets the primary background colour of the app
-        :param colour: str hexadecimal
-        :return: None
-        """
-        self.bg_colour = colour
-
-    def set_bg2(self, colour: str):
-        """
-        Sets the secondary background colour of the app
-        :param colour: str hexadecimal
-        :return: None
-        """
-        self.bg2_colour = colour
-
-    def change_fg(self, colour: str):
-        """
-        Sets the foreground (text) colour of the app
-        :param colour: str hexadecimal
-        :return: None
-        """
-        self.fg_colour = colour
-
     def set_ongoing(self, rows: int):
         """
         Sets the number of rows in the 'ongoing' listbox in app0
@@ -294,8 +267,7 @@ class Settings:
         """ 
         :return: str of all the settings
         """""
-        return ('bg-colour_' + str(self.bg_colour) + '\nbg2-colour_' + str(self.bg2_colour) + '\nfg-colour_' +
-                str(self.fg_colour) + '\nshow-error-messages_' + str(self.show_error_messages) + '\nongoing-rows_' +
+        return ('show-error-messages_' + str(self.show_error_messages) + '\nongoing-rows_' +
                 str(self.ongoing_rows) + '\npaused-rows_' + str(self.paused_rows) + '\nlast-save_' +
                 str(self.last_save) + '\ntheme_' + str(self.theme) + '\nsession_' + str(self.session) +
                 '\nKey_' + str(self.key))
@@ -305,16 +277,13 @@ class Settings:
         Sets the settings back to default, however does not update their values in app0
         :return: None
         """
-        self.bg_colour = '#007fc2'  # hexadecimal
-        self.bg2_colour = '#006cb2'
-        self.fg_colour = '#ffffff'
         self.show_error_messages = True
         self.session = False
         self.ongoing_rows = 4
         self.paused_rows = 12
         self.last_save = 0
         self.windows = platform.system() == 'Windows'
-        self.space = 26 if self.windows else 28
+        self.space = 26 if self.windows else 29
         self.font_size = 12 if self.windows else 16
         self.divide_character = u"\u00A0"  # setting '·'   MAC:' '   '-'   '—'   '…'   '_' win:u"\u00A0"
         self.app_font = ('Courier New', self.font_size)
@@ -365,22 +334,13 @@ class Settings:
             with open(self.path_settings, 'r') as infofile:
                 for line in infofile:
                     load.append(line.rstrip('\n').split("_"))
-            self.bg_colour = load[0][1]
-            self.bg2_colour = load[1][1]
-            self.fg_colour = load[2][1]
-            self.show_error_messages = load[3][1] != "False"  # != False so that if file is corrupt it returns True
-            self.ongoing_rows = int(load[4][1])
-            self.paused_rows = int(load[5][1])
-            self.last_save = int(load[6][1])
-            self.theme = load[7][1]
-            self.session = load[8][1] == "True"  # == True so that if file is corrupt it returns False
-            self.key = load[9][1]
-
-
-            colours = [self.bg_colour, self.bg2_colour, self.fg_colour]
-            if any((len(colour) != 7 or colour[0] != '#') for colour in colours):
-                raise ValueError  # checking if all colours are hexadecimal #ff0011
-
+            self.show_error_messages = load[0][1] != "False"  # != False so that if file is corrupt it returns True
+            self.ongoing_rows = int(load[1][1])
+            self.paused_rows = int(load[2][1])
+            self.last_save = int(load[3][1])
+            self.theme = load[4][1]
+            self.session = load[5][1] == "True"  # == True so that if file is corrupt it returns False
+            self.key = load[6][1]
         except (FileNotFoundError, UnicodeDecodeError, ValueError, IndexError):
             self.default_settings()
             self.settings_load_error = True
@@ -418,47 +378,49 @@ class Settings:
 
 
 # ---------------------------------------------------------------------------------------------------------- Theme Class
-class Theme():
+class Theme:
     def __init__(self, theme_name='default'):
-        if theme_name not in ['default', 'red']:  # list of themes
+        """
+        Imports the theme from a text file using eval() to evaluate a dictionary of arguments
+        :param theme_name: str of the name of the theme
+        """
+        self.available_themes = ['default', 'red']
+        if theme_name not in self.available_themes:  # list of themes
             theme_name = 'default'
-            print(123123)
         self.theme_name = theme_name
-        print(theme_name)
         if settings.windows:  # windows or mac
             self.path_theme = os.path.join(os.path.dirname(settings.path), "worktimes\\themes\\"+theme_name+".txt")
         else:
             self.path_theme = os.path.join(os.path.dirname(settings.path), "worktimes/themes/"+theme_name+".txt")
-        theme = []
+        theme = []  # the string from the file
         try:
             with open(self.path_theme, 'r') as theme_file:
                 for line in theme_file:
-                    theme.append(line.rstrip())
-            self.options_button = eval(theme[0])
-            self.options_button_red = eval(theme[1])
-            self.options_listbox = eval(theme[2])
-            self.options_frame = eval(theme[3])
-            self.options_entry = eval(theme[4])
-            self.options_label = eval(theme[5])
-            self.options_label_frame = eval(theme[6])
-            self.options_palette = eval(theme[7])
+                    theme.append(line.rstrip().split("_"))
+            self.fg = theme[0][1]
+            self.bg = theme[1][1]
+            self.bg2 = theme[2][1]
+            self.red = theme[3][1]
 
-        except KeyboardInterrupt:#(FileNotFoundError, UnicodeDecodeError, ValueError, SyntaxError):
+            colours = [self.fg, self.bg, self.bg2, self.red]
+            for colour in colours:
+                if len(colour) != 7 or colour[0] != '#':
+                    raise ValueError  # checking if all colours are hexadecimal #ff0011
+                if any([character not in "1234567890abcdef" for character in colour[1:]]):
+                    raise ValueError
+
+        except (FileNotFoundError, UnicodeDecodeError, ValueError, IndexError):  # if error then default theme
             self.theme_default()
 
     def theme_default(self):
-        fg = '#ffffff'
-        bg = '#007fc2'
-        bg2 = '#006cb2'
-        red = '#c21234'
-        self.options_button = {"bg": bg2, "fg": fg, "pady": 0, "padx": 2, "borderwidth": 1, "relief": 'flat',
-                               "activebackground": fg, "activeforeground": bg}
-        self.options_button_red = {"bg": red, "fg": fg, "pady": 0, "padx": 2, "borderwidth": 1, "relief": 'flat',
-                               "activebackground": fg, "activeforeground": bg}
-        self.options_listbox = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": 'sunken',
-                                "selectbackground": fg, "selectforeground": bg}
-        self.options_frame = {"bg": bg, "fg": fg, "borderwidth": 0, "relief": 'flat'}
-        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": 'sunken'}
+        """
+        sets default theme from hardcoded
+        :return: None but changes the class options
+        """
+        self.fg = '#ffffff'
+        self.bg = '#007fc2'
+        self.bg2 = '#006cb2'
+        self.red = '#c21234'
 
 
 # ------------------------------------------------------------------------------------------------------- Work Times app
@@ -470,23 +432,28 @@ class App0:
         app_font = settings.app_font
         ongoing_rows = settings.ongoing_rows
         paused_rows = settings.paused_rows
-        self.theme = Theme(settings.theme)
 
-        self.options_button = self.theme.options_button
-        self.options_button_red = self.theme.options_button_red
-        self.options_listbox = self.theme.options_listbox
-        self.options_frame = self.theme.options_frame
-        self.options_entry = self.theme.options_entry
-        self.options_label = self.theme.options_label
-        self.options_label_frame = self.theme.options_label_frame
-        self.options_palette = self.theme.options_palette
+        # Themes things OH boi it looks ugly
+        self.theme = Theme(settings.theme)
+        fg = self.theme.fg
+        bg = self.theme.bg
+        bg2 = self.theme.bg2
+
+        self.options_button = {"bg": bg2, "fg": fg, "borderwidth": 1, "relief": "flat",
+                               "activebackground": fg, "activeforeground": bg, "pady": 0, "padx": 2}
+        self.options_listbox = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken",
+                                "selectbackground": fg, "selectforeground": bg}
+        self.options_frame = {"bg": bg, "borderwidth": 2, "relief": "flat"}
+        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken", "width": 21}
+        self.options_label = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "flat"}
+        self.options_label_frame = {"bg": bg, "fg": fg, "borderwidth": 0, "relief": "flat"}
 
         self.master = master
-        self.frame = Frame(master)
-        self.frame.pack(fill=BOTH, expand=1, padx=0, pady=0)
         self.master.iconbitmap(settings.path_icon)
         self.master.title('Work Times')
-        self.master.tk_setPalette(background=self.options_palette["bg"], foreground=self.options_palette["fg"])
+        self.master.tk_setPalette(background=bg, foreground=bg)
+        self.frame = Frame(master)
+        self.frame.pack(fill=BOTH, expand=1, padx=0, pady=0)
 
         self.save_button = Button(self.frame, text="Save", command=self.save)
         self.save_button.grid(row=0, column=0)
@@ -517,8 +484,8 @@ class App0:
         self.paused = Listbox(self.paused_label_frame, height=paused_rows, font=app_font)
         self.paused.grid(sticky=E + W + S + N)
 
-        self.all_button = [self.save_button, self.start_stop_button, self.sort_time_button,
-                           self.refresh_button, self.add_button, self.sort_abc_button]
+        self.all_button = [self.save_button, self.start_stop_button, self.sort_time_button, self.refresh_button,
+                           self.add_button, self.sort_abc_button]
         self.all_frame = [self.frame]
         self.all_entry = [self.entry]
         self.all_label = [self.entry_label]
@@ -527,15 +494,28 @@ class App0:
 
         # ---------------------------------------------------------------------------------------------- Startup Methods
 
-        self.startup()
         self.clock()
-        self.full_update()
+        self.startup()
 
     def startup(self):
         """
-        This function is only here so i can minimize it in PyCharm
+        This function is only here so i can minimize it in PyCharm. This is the ugliest method in the file.
         :return: None or raises errors
         """
+        for widget in self.all_button:
+            widget.configure(self.options_button)
+        for widget in self.all_listbox:
+            widget.configure(self.options_listbox)
+        for widget in self.all_frame:
+            widget.configure(self.options_frame)
+        for widget in self.all_entry:
+            widget.configure(self.options_entry)
+        for widget in self.all_label:
+            widget.configure(self.options_label)
+        for widget in self.all_label_frame:
+            widget.configure(self.options_label_frame)
+        self.is_saved()
+        self.update()
         # ------------------------------------------------------------------------------------ Failed to import settings
         if settings.settings_load_error:  # settings need to be loaded before this point
             self.master.update()
@@ -603,8 +583,8 @@ class App0:
         """
         self.paused.delete(0, END)  # empties both lists
         self.ongoing.delete(0, END)
-        paused_bg1, paused_bg2 = settings.bg_colour, settings.bg2_colour  # alternating colours and lines
-        ongoing_bg1, ongoing_bg2 = settings.bg_colour, settings.bg2_colour
+        paused_bg1, paused_bg2 = self.theme.bg, self.theme.bg2  # alternating colours and lines
+        ongoing_bg1, ongoing_bg2 = self.theme.bg, self.theme.bg2
         for task in self.worktasks.get_list():  # adds tasks back into lists
             if task.is_ongoing():
                 self.ongoing.insert(END, task.displaytext())
@@ -615,26 +595,6 @@ class App0:
                 self.paused.itemconfig(END, {'bg': paused_bg1})
                 paused_bg1, paused_bg2 = paused_bg2, paused_bg1
         self.is_saved()
-
-    def full_update(self):
-        """
-        Fully updates all parts of app0 to fix colours and appearance while also calling
-        :return: None
-        """
-        for widget in self.all_button:
-            widget.configure(self.options_button)
-        for widget in self.all_listbox:
-            widget.configure(self.options_listbox)
-        for widget in self.all_frame:
-            widget.configure(self.options_frame)
-        for widget in self.all_entry:
-            widget.configure(self.options_entry)
-        for widget in self.all_label:
-            widget.configure(self.options_label)
-        for widget in self.all_label_frame:
-            widget.configure(self.options_label_frame)
-        self.is_saved()
-        self.update()
 
     def open_settings(self):
         """
@@ -659,15 +619,15 @@ class App0:
         self.update()
         self.is_saved()
 
-    def is_saved(self):
+    def is_saved(self) -> bool:
         """
         returns whether project is saved AND changes button colour
         :return: bool if project is saved
         """
         if self.saved and not self.worktasks.is_ongoing():
-            self.save_button.configure(self.options_button)
+            self.save_button.configure(bg=self.theme.bg2)
         else:
-            self.save_button.configure(self.options_button_red)
+            self.save_button.configure(bg=self.theme.red)
 
         self.saved = self.saved and not self.worktasks.is_ongoing()
         return self.saved
@@ -786,93 +746,88 @@ class App0:
 # --------------------------------------------------------------------------------------------------------- Settings app
 class App1:
     def __init__(self, master):
-
+        """
+        It gets uglier the more you look at it
+        :param master: the maste that is passed through from app0
+        """
         self.master = master
         self.frame = Frame(master, borderwidth=1)
         self.frame.grid()
         self.master.iconbitmap(settings.path_icon)
         self.master.title("Settings")
         self.saved = True
-        fg = settings.fg_colour
-        bg = settings.bg_colour
-        bg2 = settings.bg2_colour
-        self.options_button = {"bg": bg2, "fg": fg, "pady": 3, "padx": 1, "borderwidth": 1, "relief": 'flat',
-                               "activebackground": fg, "activeforeground": bg, "width": 20}
-        self.options_label_frame = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": 'raised'}
-        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": 'sunken', "width": 19}
 
-        session = settings.session  # this is a static variable, it is not a mistake
+        self.theme = app0.theme
         m = {True: "Turn off warning dialogs", False: "Turn on warning dialogs"}
         n = {True: "Show total", False: "Show this session"}
+        options = self.theme.available_themes
+        self.variable_colour = StringVar(master)
+        self.variable_colour.set(options[0])
+
+        fg = self.theme.fg
+        bg = self.theme.bg
+        bg2 = self.theme.bg2
+        self.options_button = {"bg": bg2, "fg": fg, "borderwidth": 1, "relief": "flat", "activebackground": fg,
+                               "activeforeground": bg, "pady": 0, "padx": 2, "width": 20}
+        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken", "width": 21}
+        self.options_label_frame = {"bg": bg, "fg": fg, "borderwidth": 0, "relief": "flat"}
 
         self.label_show_session = LabelFrame(self.frame, text="Sessions:", bg=bg, fg=fg)
         self.label_show_session.grid(row=0, column=0, columnspan=2)
-        self.button_show_session = Button(self.label_show_session, text=n[session], command=self.show_session)
-        self.button_show_session.grid(row=1, column=0)
+        self.button_show_session = Button(self.label_show_session, text=n[settings.session], command=self.show_session)
+        self.button_show_session.grid(row=1, column=0, ipadx=3)
         self.button_new_session = Button(self.label_show_session, text="Start new session", command=self.new_session)
-        self.button_new_session.grid(row=1, column=1)
+        self.button_new_session.grid(row=1, column=1, ipadx=3)
 
-        self.label_appearance_and_usage = LabelFrame(self.frame, text="Appearance and usage:")
-        self.label_appearance_and_usage.grid(row=2, column=0,  columnspan=2)
-        # self.label_value = Label(self.label_appearance_and_usage, text="Value", bg=bg, fg=fg)
-        # self.label_value.grid(row=2, column=1)
-        self.button_text_colour = Button(self.label_appearance_and_usage, text="Change text colour", command=self.fg_colour)
-        self.button_text_colour.grid(row=3, column=0)
-        self.entry_fg = Entry(self.label_appearance_and_usage)
-        self.entry_fg.grid(row=3, column=1, columnspan=2)
-        self.button_app_colour = Button(self.label_appearance_and_usage, text="Change app colour", command=self.bg_colour)
-        self.button_app_colour.grid(row=4, column=0)
-        self.entry_bg = Entry(self.label_appearance_and_usage)
-        self.entry_bg.grid(row=4, column=1, columnspan=2)
-        self.button_app2_colour = Button(self.label_appearance_and_usage, text="Change app 2nd colour", command=self.bg2_colour)
-        self.button_app2_colour.grid(row=5, column=0)
-        self.entry_bg2 = Entry(self.label_appearance_and_usage)
-        self.entry_bg2.grid(row=5, column=1, columnspan=2)
-        self.button_ongoing_rows = Button(self.label_appearance_and_usage, text="Change Ongoing tasks rows", command=self.set_ongoing_rows)
-        self.button_ongoing_rows.grid(row=6, column=0)
-        self.entry_ongoing_rows = Entry(self.label_appearance_and_usage)
-        self.entry_ongoing_rows.grid(row=6, column=1, columnspan=2)
-        self.button_paused_rows = Button(self.label_appearance_and_usage, text="Change Paused tasks rows", command=self.set_paused_rows)
-        self.button_paused_rows.grid(row=7, column=0)
-        self.entry_paused_rows = Entry(self.label_appearance_and_usage)
-        self.entry_paused_rows.grid(row=7, column=1, columnspan=2)
-        self.button_warning = Button(self.label_appearance_and_usage, text=m[settings.show_error_messages], command=self.warning_dialog)
-        self.button_warning.grid(row=9, column=0)
-
-        self.label_info_save = LabelFrame(self.frame, text="Info, Save, Remove task and Restore Settings:")
-        self.label_info_save.grid(row=10, column=0,  columnspan=2)
-        self.button_settings_save = Button(self.label_info_save, text="Save settings", command=self.save_settings)
-        self.button_settings_save.grid(row=11, column=0)
-        self.button_restore_setting = Button(self.label_info_save, text="Restore default settings", command=self.restore)
-        self.button_restore_setting.grid(row=11, column=1)
-        self.button_show_info = Button(self.label_info_save, text="Show Info help and license", command=self.show_info)
-        self.button_show_info.grid(row=12, column=0)
-        self.button_remove_task = Button(self.label_info_save, text="Remove selected task", command=self.remove_task)
-        self.button_remove_task.grid(row=12, column=1)
+        self.label_app_and_use = LabelFrame(self.frame, text="Appearance and usage:")
+        self.label_app_and_use.grid(row=2, column=0, columnspan=1)
+        self.button_apply_theme = Button(self.label_app_and_use, text="Apply theme", command=self.apply_theme)
+        self.button_apply_theme.grid(row=3, column=0)
+        self.option_menu_theme = OptionMenu(self.label_app_and_use, self.variable_colour, *options)
+        self.option_menu_theme.grid(row=3, column=1, columnspan=2)
+        self.button_ongoing_rows = Button(self.label_app_and_use, text="Change Ongoing tasks rows", command=self.set_ongoing_rows)
+        self.button_ongoing_rows.grid(row=4, column=0)
+        self.entry_ongoing_rows = Entry(self.label_app_and_use)
+        self.entry_ongoing_rows.grid(row=4, column=1, columnspan=2)
+        self.button_paused_rows = Button(self.label_app_and_use, text="Change Paused tasks rows", command=self.set_paused_rows)
+        self.button_paused_rows.grid(row=5, column=0)
+        self.entry_paused_rows = Entry(self.label_app_and_use)
+        self.entry_paused_rows.grid(row=5, column=1, columnspan=2)
+        self.button_warning = Button(self.label_app_and_use, text=m[settings.show_error_messages], command=self.warning_dialog)
+        self.button_warning.grid(row=6, column=0)
 
         self.label_license = LabelFrame(self.frame, text="License:")
-        self.label_license.grid(row=13, column=0)
-        # self.label_key = Label(self.frame, text="Key")
-        # self.label_key.grid(row=13, column=1)
+        self.label_license.grid(row=10, column=0)
         self.button_add_key = Button(self.label_license, text="Enter Key:", command=self.add_key)
-        self.button_add_key.grid(row=14, column=0)
+        self.button_add_key.grid(row=11, column=0)
         self.entry_key = Entry(self.label_license)
-        self.entry_key.grid(row=14, column=1)
+        self.entry_key.grid(row=11, column=1)
 
-        self.all_button = [self.button_settings_save, self.button_add_key, self.button_app2_colour,
-                           self.button_app_colour, self.button_new_session, self.button_ongoing_rows,
-                           self.button_paused_rows, self.button_remove_task, self.button_restore_setting,
-                           self.button_show_info, self.button_show_session, self.button_text_colour,
-                           self.button_warning]
-        self.all_entry = [self.entry_key, self.entry_bg, self.entry_bg2, self.entry_fg, self.entry_ongoing_rows,
+        self.label_info_save = LabelFrame(self.frame, text="Info, Save, Remove task and Restore Settings:")
+        self.label_info_save.grid(row=12, column=0,  columnspan=2)
+        self.button_settings_save = Button(self.label_info_save, text="Save settings", command=self.save_settings)
+        self.button_settings_save.grid(row=13, column=0, ipadx=3)
+        self.button_restore_setting = Button(self.label_info_save, text="Reset settings", command=self.restore)
+        self.button_restore_setting.grid(row=13, column=1, ipadx=3)
+        self.button_show_info = Button(self.label_info_save, text="Show Info help and license", command=self.show_info)
+        self.button_show_info.grid(row=14, column=0, ipadx=3)
+        self.button_remove_task = Button(self.label_info_save, text="Remove selected task", command=self.remove_task)
+        self.button_remove_task.grid(row=14, column=1, ipadx=3)
+
+        self.all_button = [self.button_settings_save, self.button_add_key, self.button_new_session,
+                           self.button_ongoing_rows, self.button_paused_rows, self.button_remove_task,
+                           self.button_restore_setting, self.button_show_info, self.button_show_session,
+                           self.option_menu_theme, self.button_warning, self.button_apply_theme]
+        self.all_entry = [self.entry_key, self.entry_ongoing_rows,
                           self.entry_paused_rows]
-        self.all_label_frame = [self.label_license, self.label_show_session, self.label_appearance_and_usage,
+        self.all_label_frame = [self.label_license, self.label_show_session, self.label_app_and_use,
                                 self.label_info_save]
         self.full_update()
 
     # --------------------------------------------------------------------------------------------- App1 class functions
     def full_update(self):
         for widget in self.all_button:
+            widget.propagate(0)
             widget.configure(self.options_button)
         for widget in self.all_label_frame:
             widget.configure(self.options_label_frame)
@@ -902,7 +857,6 @@ class App1:
         :return: None
         """
         settings.save_settings()
-        self.button_settings_save.configure(bg=settings.fg_colour, fg=settings.bg_colour)
         self.saved = True
         self.is_saved()
 
@@ -943,6 +897,15 @@ class App1:
             return
         messagebox.showerror("Session Update", "Show current session before starting a new one.", icon="info")
 
+    def apply_theme(self):
+        """
+        This changes the settings.theme variable so a different theme is loaded next startup.
+        :return: None
+        """
+        settings.theme = self.variable_colour.get()
+        messagebox.showinfo("Theme Update", "Theme has been changed, a restart is required to see full effect.\n\n"
+                                            "Remember to save changes.", parent=self.master)
+
     def set_ongoing_rows(self):
         """
         changed the number of rows in the ongoing ListBox
@@ -969,63 +932,6 @@ class App1:
         self.saved = False
         self.is_saved()
 
-    def bg_colour(self):
-        """
-        changes the first background colour it takes input from the rgb field and only takes inputs in the format
-        '(255,255,255)'
-        :return: None
-        """
-        try:
-            colour_tuple = tuple(map(int, self.entry_bg.get()[1:-1].split(",")))
-            if any(i > 255 or i < 0 for i in colour_tuple):
-                raise ValueError
-            bg = '#%02x%02x%02x' % colour_tuple
-            settings.bg_colour = bg
-        except (TypeError, ValueError):
-            messagebox.showerror("Change bg colour", "Colour must be in (R,G,B) format", parent=self.master)
-        self.saved = False
-        self.is_saved()
-        app0.full_update()
-
-    def bg2_colour(self):
-        """
-        changes the 2nd background colour it takes input from the rgb field and only takes inputs in the format
-        '(255,255,255)'
-        :return: None
-        """
-        try:
-            colour_tuple = tuple(map(int, self.entry_bg2.get()[1:-1].split(",")))
-            if any(i > 255 or i < 0 for i in colour_tuple):
-                raise ValueError
-            bg2 = '#%02x%02x%02x' % colour_tuple
-            settings.bg2_colour = bg2
-        except (TypeError, ValueError):
-            messagebox.showerror("Change bg colour", "Colour must be in (R,G,B) format", parent=self.master)
-        self.saved = False
-        self.is_saved()
-        app0.update()
-
-    def fg_colour(self):
-        """
-        changes the foreground colour (text colour) it takes input from the rgb field and only takes inputs in
-        the format '(255,255,255)'
-        :return: None
-        """
-        try:
-            colour_tuple = tuple(map(int, self.entry_fg.get()[1:-1].split(",")))
-            if any(i > 255 or i < 0 for i in colour_tuple):
-                raise ValueError
-            fg = '#%02x%02x%02x' % colour_tuple
-            settings.fg_colour = fg
-            root0.tk_setPalette(background=settings.bg_colour, fg=fg)
-            messagebox.showerror("Change fg colour", "Colour has been changed a restart may be required to see full "
-                                                     "effect.", parent=self.master)
-        except (TypeError, ValueError):
-            messagebox.showerror("Change fg colour", "Colour must be in (R,G,B) format", parent=self.master)
-        self.saved = False
-        self.is_saved()
-        app0.update()
-
     def warning_dialog(self):
         """changes whether warning dialogs appear, also changes the text of the button"""
         if settings.show_error_messages:
@@ -1050,18 +956,21 @@ class App1:
             return
         settings.default_settings()
         settings.save_settings()
-        result = messagebox.askyesno("Restore settings", "Dettings have been restored to their default value "
+        result = messagebox.askyesno("Restore settings", "Settings have been restored to their default value "
                                                          "the app needs to be restarted for this to take full effect.\n"
                                                          "Do you wish to restart now?", icon="question")
         if result:
             quit()
 
-    def is_saved(self):
-        """returns whether settings are saved AND changes button colour"""
+    def is_saved(self) -> bool:
+        """
+        returns whether settings are saved AND changes button colour
+        :return: bool if settings are saved
+        """
         if self.saved:
-            self.button_settings_save.configure(bg=settings.fg_colour, fg=settings.bg_colour)
+            self.button_settings_save.configure(bg=self.theme.bg2, fg=self.theme.fg)
         else:
-            self.button_settings_save.configure(bg='#c21234', fg=settings.fg_colour)
+            self.button_settings_save.configure(bg=self.theme.red, fg=self.theme.fg)
         return self.saved
 
     def ask_save(self):
@@ -1107,7 +1016,6 @@ class App2:
     """
     this is just a text window that displays the text from the info file
     """
-
     def __init__(self, master):
         textbox = Text(master, height=28, width=40)
         textbox.pack()
@@ -1133,7 +1041,6 @@ if __name__ == "__main__":
 # TODO: documentation for the theme class
 # TODO: finish class theme
 # TODO: update info file
-# TODO: theme change in app1
-# TODO: the theme doesnt apply to the update function when coloring the elements in ListBox
+# TODO: appearance of the options menu button
 
 sys.exit()
