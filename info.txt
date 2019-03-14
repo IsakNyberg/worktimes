@@ -3,8 +3,8 @@
 #              Work Times              #
 #         By Kjell Isak Nyberg         #
 #                                      #
-#            isak@nyberg.dev           #
-#             9 March 2019             #
+#           kjell@nyberg.dev           #
+#            14 March 2019             #
 #--------------------------------------#
 
 Information:
@@ -14,8 +14,9 @@ time the user spends on certain tasks
 such as homework and job assignments. 
 The Program is written in python 3.6
 using the modules: tkinter, os, time
-and platform, and datetime. It has been
-compiled for windows (32 & 64).
+and platform, hashlib, and datetime. 
+It has been compiled for windows 
+(32 & 64).
 
 ----------------------------------------
 
@@ -37,12 +38,14 @@ into the "New Task" field. Thereafter
 the buttons "Add" needs to be pressed
 and the task will appear in the "Paused"
 area.
-		*** Note! *** 
+		  *** Note! ***
 A task name CANNOT contain the
 characters "_" (underscore) and "#" 
 (pound sign). This will cause the save
 file to become partially unreadable and
-weird things may happen.
+weird things may happen. In addition,
+without activating the licence the 
+number of tasks are limited to 5.
 
 Save:
 The save button will save the task to a
@@ -51,14 +54,14 @@ next time the app is launched. All tasks
 are saved locally in plaintext and only
 a person with access this computer will
 be see them.
-  
+
 Start and stop:
 To start a task it needs to be selected
 from the "paused" field thereafter press
 the "Start | Stop" button. Then the task
 will move to the "Ongoing" field.
 To stop a task do the same procedure.
- 
+
 Sorting:
 All tasks can be sorted alphabetically
 by pressing the "Sort ABC" button or
@@ -73,20 +76,19 @@ settings window.
 ----------------------------------------
 
 Settings:
-The settings can be accessed by typing
-"settings" into the "New Task" field
-and then pressing "Add."
- 
+The settings can be accessed from the
+button in the top right corner.
+
              #-------------#
              #Sessions:    #
              #[_____][____]#
-             # A & U       #
-             #[_____][____]#
-             #[_____][____]#
+             # A & U:      #
              #[_____][____]#
              #[_____][____]#
              #[_____][____]#
              #[_____]      #
+             #License:     #
+             #[_____][____]#
              # I S R       #
              #[_____][____]#
              #[_____]      #
@@ -97,49 +99,34 @@ session allows you to keep track of
 smaller time periods. This lets you
 reset the time of all tasks while 
 still keeping track of the total amount
-of time spent on a task. 
+of time spent on a task.
 
-Change text and app colour:
-The colour can be changed by entering an
-RGB code in the form of (R,G,B) for 
-example (125,200,0) and then pressing 
-the respective change colour buttons.
-The 2nd app colour is the background 
-colour of every second line in the list.
-(Restarting the app is required for a
-full effect).
+Themes:
+A theme can be selected from the drop-
+down menu on the right and thereafter
+pressing the 'Apply theme' button.Make
+sure to save, and the theme will load
+next time the app is started.
 
-example colour schemes:
-	#------------------------#
-	#Red:     (255,255,255)  #
-	#         (200,0,0)      #
-	#         (170,0,0)      #
-	#                        #
-	#Green:   (111,15,100)   #
-	#         (144,238,144)  #
-	#         (125,205,115)  #
-	#                        #
-	#Dark:    (255,255,255)  #
-	#         (0,0,0)        #
-	#         (60,60,60)     #
-	#                        #
-	#Default: (255,255,255)  #
-	#         (0,127,194)    #
-	#         (0,108,178)    #
-	#------------------------#
+There is also a custom theme, which is
+made in case the user wants to make
+their own theme. In order to do so they
+must find the 'custom.txt' file in the
+theme folder and follow the
+instructions.
 
 Task rows:
 The number of rows dedicated to 
 displaying the tasks for both the 
 ongoing and paused tasks.
-default is 5 and 20 respectively.
+default is 4 and 12 respectively.
 
 Turning on/off warning dialogs:
 This will prevent most popup windows in
 order to prevent annoyance. Some windows
 will remain such as the one asking if
 you want to save when you close the app.
- 
+
 Save and restore:
 These save the settings and restores the
 default settings respectively.
@@ -147,6 +134,14 @@ default settings respectively.
 Remove selected task:
 This removes the selected task, tasks
 that are ongoing cannot be removed.
+
+License:
+As previously mentioned, in order to
+have more than 5 tasks at the time. A
+license needs to be entered. it this
+is a concern, please reach out to:
+kjell@nyberg.dev
+for more information.
 
 #--------------------------------------#
 #              Good Luck               #

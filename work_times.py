@@ -21,10 +21,10 @@ class TaskList:
     def get_list(self):
         return self.allTasks
 
-    def append_task(self, task) -> None:
+    def append_task(self, task):
         self.allTasks.append(task)
 
-    def remove_task(self, task) -> None:
+    def remove_task(self, task):
         self.allTasks.remove(task)
 
     def sort_alphabetically(self, reverse: bool):
@@ -51,7 +51,7 @@ class TaskList:
         """
         return any(task.is_ongoing() for task in self.allTasks)
 
-    def in_task_list(self, task_name) -> bool:
+    def in_task_list(self, task_name: str) -> bool:
         """
         works the same as in for lists
         :param task_name: String, name of a task
@@ -59,7 +59,7 @@ class TaskList:
         """
         return any(task.get_name() == task_name for task in self.allTasks)
 
-    def get_task(self, task_name):
+    def get_task(self, task_name: str):
         """
         Returns Task object with name == task_name
         :param task_name: str name of task
@@ -70,7 +70,7 @@ class TaskList:
                 return task
         return None
 
-    def get_total(self):
+    def get_total(self) -> int:
         """
         gets sum of the total time of all tasks
         :return: int total time
@@ -123,16 +123,16 @@ class Task:
     def __repr__(self):
         return str(self.name)
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self.name
 
-    def get_total(self):
+    def get_total(self) -> int:
         return self.total
 
-    def get_session(self):
+    def get_session(self) -> int:
         return self.session
 
-    def get_start(self):
+    def get_start(self) -> int:
         return self.start
 
     def set_name(self, name: str):
@@ -141,7 +141,7 @@ class Task:
     def set_total(self, total: int):
         self.total = int(total)
 
-    def is_ongoing(self):
+    def is_ongoing(self) -> bool:
         return self.ongoing
 
     def new_session(self):
@@ -165,10 +165,10 @@ class Task:
         self.ongoing = False
         self.start = 0
 
-    def displaytext(self):
+    def displaytext(self) -> str:
         """
         Returns string in format for the listbox in app0 using magic
-        :return: str in format name + '   ' + time
+        :return: str in format name + ' ... ' + time
         """
         space = settings.space  # the number of spaces in a row in app0
         divide_character = settings.divide_character  # this is the empty character between the task name and the time
@@ -186,7 +186,7 @@ class Task:
         return self.name + divide + time_seconds
 
     @staticmethod
-    def format_time(time_seconds):
+    def format_time(time_seconds: int) -> str:
         """
         formats seconds to XXh XXm format
         :param time_seconds: int time in seconds
@@ -217,7 +217,7 @@ class Settings:
         self.session = False
         self.last_save = 0
         self.key = 'key'
-        self.theme = 'default'  # TODO
+        self.theme = 'Default'
         # ------------- dynamic non editable
         self.windows = platform.system() == 'Windows'
         self.space = 26 if self.windows else 29
@@ -263,7 +263,7 @@ class Settings:
         """
         self.paused_rows = rows
 
-    def to_string(self):
+    def to_string(self) -> str:
         """ 
         :return: str of all the settings
         """""
@@ -278,17 +278,17 @@ class Settings:
         :return: None
         """
         self.show_error_messages = True
-        self.session = False
+        self.session = True
         self.ongoing_rows = 4
         self.paused_rows = 12
         self.last_save = 0
         self.windows = platform.system() == 'Windows'
         self.space = 26 if self.windows else 29
         self.font_size = 12 if self.windows else 16
-        self.divide_character = u"\u00A0"  # setting '·'   MAC:' '   '-'   '—'   '…'   '_' win:u"\u00A0"
+        self.divide_character = u"\u00A0"  # alternatives '·'   MAC:' '   '-'   '—'   '…'   '_' win:u"\u00A0"
         self.app_font = ('Courier New', self.font_size)
-        self.key = self.key  # should change
-        self.theme = 'default'
+        self.key = self.key  # should not change
+        self.theme = 'Default'
 
     def set_filepaths(self):
         """
@@ -339,7 +339,7 @@ class Settings:
             self.paused_rows = int(load[2][1])
             self.last_save = int(load[3][1])
             self.theme = load[4][1]
-            self.session = load[5][1] == "True"  # == True so that if file is corrupt it returns False
+            self.session = load[5][1] != "False"  # != False so that if file is corrupt it returns True
             self.key = load[6][1]
         except (FileNotFoundError, UnicodeDecodeError, ValueError, IndexError):
             self.default_settings()
@@ -355,10 +355,10 @@ class Settings:
         with open(self.path_settings, "a") as settings_save_file:
             settings_save_file.write(write)  # writes massive string to settings.rfe file
 
-    def full_version(self, entry_key=''):
+    def full_version(self, entry_key='key') -> bool:
         """
-        compares the hash of the key to a master hash
-        :return: bool whether the key matches any of the license hashes
+        Compares the hash of the key to a master hash, but if the key is already activated, returns true
+        :return: bool whether the key matches any of the license hashes or if key is already activated
         """
         hashed_keys = ['8d15e1733fbf3129a9e201c2b7af6024e5c6b1d11fa9893aafc32536e147aec6',
                        'e811be7e5d5cdcad2ce1161b1260c5aa2aae78952626dd206d0b2697a3b7a9de',
@@ -381,12 +381,13 @@ class Settings:
 class Theme:
     def __init__(self, theme_name='default'):
         """
-        Imports the theme from a text file using eval() to evaluate a dictionary of arguments
+        Imports the theme from a text file. Text-file is chosen based on theme_name.
+        If import is failed default theme is set from hardcoded values.
         :param theme_name: str of the name of the theme
         """
-        self.available_themes = ['default', 'red']
+        self.available_themes = ['Default', 'Red', 'Green', 'Pink', 'Black', 'White', 'Grey', 'Custom']
         if theme_name not in self.available_themes:  # list of themes
-            theme_name = 'default'
+            theme_name = 'Default'
         self.theme_name = theme_name
         if settings.windows:  # windows or mac
             self.path_theme = os.path.join(os.path.dirname(settings.path), "worktimes\\themes\\"+theme_name+".txt")
@@ -414,7 +415,7 @@ class Theme:
 
     def theme_default(self):
         """
-        sets default theme from hardcoded
+        sets default theme from hardcoded values
         :return: None but changes the class options
         """
         self.fg = '#ffffff'
@@ -429,16 +430,15 @@ class App0:
         self.sorted = 'random'
         self.saved = True
         self.worktasks = TaskList()
+        # -------------- Themes
+        self.theme = Theme(settings.theme)
         app_font = settings.app_font
         ongoing_rows = settings.ongoing_rows
         paused_rows = settings.paused_rows
-
-        # Themes things OH boi it looks ugly
-        self.theme = Theme(settings.theme)
         fg = self.theme.fg
         bg = self.theme.bg
         bg2 = self.theme.bg2
-
+        # -------------- Appearance using too many dictionaries
         self.options_button = {"bg": bg2, "fg": fg, "borderwidth": 1, "relief": "flat",
                                "activebackground": fg, "activeforeground": bg, "pady": 0, "padx": 2}
         self.options_listbox = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken",
@@ -447,14 +447,15 @@ class App0:
         self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken", "width": 21}
         self.options_label = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "flat"}
         self.options_label_frame = {"bg": bg, "fg": fg, "borderwidth": 0, "relief": "flat"}
-
+        #  -------------- Master configuration
         self.master = master
         self.master.iconbitmap(settings.path_icon)
         self.master.title('Work Times')
         self.master.tk_setPalette(background=bg, foreground=bg)
+        #  -------------- Main Frame
         self.frame = Frame(master)
         self.frame.pack(fill=BOTH, expand=1, padx=0, pady=0)
-
+        #  -------------- Top Menu
         self.save_button = Button(self.frame, text="Save", command=self.save)
         self.save_button.grid(row=0, column=0)
         self.sort_abc_button = Button(self.frame, text="Sort Abc", command=self.sort_abc)
@@ -471,19 +472,18 @@ class App0:
         self.entry_label.grid(row=1, column=0)
         self.entry = Entry(self.frame)
         self.entry.grid(row=1, column=1, columnspan=4, sticky=E + W)
-
+        #  -------------- The Two Listboxes
         self.ongoing_label_frame = LabelFrame(self.frame, text="Ongoing")
         self.ongoing_label_frame.grid(columnspan=6, sticky=E + W + S + N)
         self.ongoing_label_frame.columnconfigure(0, weight=1)
         self.ongoing = Listbox(self.ongoing_label_frame, height=ongoing_rows, font=app_font)
         self.ongoing.grid(sticky=E + W + S + N)
-
         self.paused_label_frame = LabelFrame(self.frame, text="Paused")
         self.paused_label_frame.grid(columnspan=6, sticky=E + W + S + N)
         self.paused_label_frame.columnconfigure(0, weight=1)
         self.paused = Listbox(self.paused_label_frame, height=paused_rows, font=app_font)
         self.paused.grid(sticky=E + W + S + N)
-
+        #  -------------- Collection of all widget parts
         self.all_button = [self.save_button, self.start_stop_button, self.sort_time_button, self.refresh_button,
                            self.add_button, self.sort_abc_button]
         self.all_frame = [self.frame]
@@ -492,17 +492,17 @@ class App0:
         self.all_listbox = [self.ongoing, self.paused]
         self.all_label_frame = [self.paused_label_frame, self.ongoing_label_frame]
 
-        # ---------------------------------------------------------------------------------------------- Startup Methods
-
-        self.clock()
+        # --------------- Startup Methods
         self.startup()
+        self.clock()
 
     def startup(self):
         """
         This function is only here so i can minimize it in PyCharm. This is the ugliest method in the file.
         :return: None or raises errors
         """
-        for widget in self.all_button:
+        # You're not meant to look at it, simply acknowledge that it works, and don't question how.
+        for widget in self.all_button:  # apparently you can make a class Button instead but now its too late
             widget.configure(self.options_button)
         for widget in self.all_listbox:
             widget.configure(self.options_listbox)
@@ -524,9 +524,8 @@ class App0:
                                  "The default settings will be used.\n"
                                  "If this error is persistent please restore to default under in the settings window.",
                                  parent=self.master)
-
         # ------------------------------------------------------------------------------------------------- Import Tasks
-        try:  # this method needs to be in app0
+        try:  # this method needs to be in app0 because the Task List is a attribute of app0
             self.worktasks.import_tasks()
             return
         except FileNotFoundError:
@@ -542,6 +541,7 @@ class App0:
                                                       "This will cause all previous data to be lost.")
         if create_new_savefile:
             self.worktasks.save()
+            return
         else:
             messagebox.showerror("Please review save file",
                                  "Please review the data.txt file in order to prevent data loss.\n\n"
@@ -557,7 +557,7 @@ class App0:
                 self.show_info()
             self.worktasks.save()
 
-    # --------------------------------------------------------------------------------------------- App0 class functions
+    # ------------------- App0 class functions
     @staticmethod
     def to_task_name(selection):
         """
@@ -601,7 +601,7 @@ class App0:
         Opens the settings window using Toplevel
         :return: None
         """
-        self.settings_window = Toplevel(self.master)
+        self.settings_window = Toplevel(self.master)  # must be defined outside __init__ else it will appear on startup
         self.app1 = App1(self.settings_window)
         self.settings_window.protocol("WM_DELETE_WINDOW", self.app1.ask_save)  # prompt when window is closed
         self.settings_window.resizable(0, 0)
@@ -638,7 +638,7 @@ class App0:
         :return: None, put triggers a popup
         """
         if self.is_saved():
-            root0.destroy()
+            root.destroy()
             return
         self.save_button.flash()
         question = messagebox.askyesnocancel("Save", "Do you want to save before you exit?")
@@ -738,7 +738,7 @@ class App0:
             self.update()
 
     def show_info(self):
-        self.info_window = Toplevel(self.master)
+        self.info_window = Toplevel(self.master)   # must be defined outside __init__ else it will appear on startup
         self.app2 = App2(self.info_window)
         self.info_window.resizable(0, 0)
 
@@ -748,7 +748,7 @@ class App1:
     def __init__(self, master):
         """
         It gets uglier the more you look at it
-        :param master: the maste that is passed through from app0
+        :param master: the master that is passed through from app0
         """
         self.master = master
         self.frame = Frame(master, borderwidth=1)
@@ -758,23 +758,23 @@ class App1:
         self.saved = True
 
         self.theme = app0.theme
-        m = {True: "Turn off warning dialogs", False: "Turn on warning dialogs"}
-        n = {True: "Show total", False: "Show this session"}
+        text_warning_button = "Turn off warning dialogs" if settings.ongoing_rows else "Turn on warning dialogs"
+        text_session = "Show total" if settings.session else "Show this session"
         options = self.theme.available_themes
         self.variable_colour = StringVar(master)
-        self.variable_colour.set(options[0])
+        self.variable_colour.set(settings.theme)
 
         fg = self.theme.fg
         bg = self.theme.bg
         bg2 = self.theme.bg2
-        self.options_button = {"bg": bg2, "fg": fg, "borderwidth": 1, "relief": "flat", "activebackground": fg,
+        self.options_button = {"bg": bg2, "fg": fg, "borderwidth": 1, "relief": "raised", "activebackground": fg,
                                "activeforeground": bg, "pady": 0, "padx": 2, "width": 20}
-        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken", "width": 21}
+        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken", "width": 25}
         self.options_label_frame = {"bg": bg, "fg": fg, "borderwidth": 0, "relief": "flat"}
 
         self.label_show_session = LabelFrame(self.frame, text="Sessions:", bg=bg, fg=fg)
         self.label_show_session.grid(row=0, column=0, columnspan=2)
-        self.button_show_session = Button(self.label_show_session, text=n[settings.session], command=self.show_session)
+        self.button_show_session = Button(self.label_show_session, text=text_session, command=self.show_session)
         self.button_show_session.grid(row=1, column=0, ipadx=3)
         self.button_new_session = Button(self.label_show_session, text="Start new session", command=self.new_session)
         self.button_new_session.grid(row=1, column=1, ipadx=3)
@@ -784,21 +784,22 @@ class App1:
         self.button_apply_theme = Button(self.label_app_and_use, text="Apply theme", command=self.apply_theme)
         self.button_apply_theme.grid(row=3, column=0)
         self.option_menu_theme = OptionMenu(self.label_app_and_use, self.variable_colour, *options)
-        self.option_menu_theme.grid(row=3, column=1, columnspan=2)
-        self.button_ongoing_rows = Button(self.label_app_and_use, text="Change Ongoing tasks rows", command=self.set_ongoing_rows)
+        self.option_menu_theme.grid(row=3, column=1)
+        self.option_menu_theme['menu'].config(bg=fg, fg=bg)
+        self.button_ongoing_rows = Button(self.label_app_and_use, text="Set ongoing eows", command=self.set_ongoing_row)
         self.button_ongoing_rows.grid(row=4, column=0)
         self.entry_ongoing_rows = Entry(self.label_app_and_use)
         self.entry_ongoing_rows.grid(row=4, column=1, columnspan=2)
-        self.button_paused_rows = Button(self.label_app_and_use, text="Change Paused tasks rows", command=self.set_paused_rows)
+        self.button_paused_rows = Button(self.label_app_and_use, text="Set paused rows", command=self.set_paused_rows)
         self.button_paused_rows.grid(row=5, column=0)
         self.entry_paused_rows = Entry(self.label_app_and_use)
         self.entry_paused_rows.grid(row=5, column=1, columnspan=2)
-        self.button_warning = Button(self.label_app_and_use, text=m[settings.show_error_messages], command=self.warning_dialog)
+        self.button_warning = Button(self.label_app_and_use, text=text_warning_button, command=self.warning_dialog)
         self.button_warning.grid(row=6, column=0)
 
         self.label_license = LabelFrame(self.frame, text="License:")
         self.label_license.grid(row=10, column=0)
-        self.button_add_key = Button(self.label_license, text="Enter Key:", command=self.add_key)
+        self.button_add_key = Button(self.label_license, text="Enter key:", command=self.add_key)
         self.button_add_key.grid(row=11, column=0)
         self.entry_key = Entry(self.label_license)
         self.entry_key.grid(row=11, column=1)
@@ -903,10 +904,12 @@ class App1:
         :return: None
         """
         settings.theme = self.variable_colour.get()
+        self.saved = False
+        self.is_saved()
         messagebox.showinfo("Theme Update", "Theme has been changed, a restart is required to see full effect.\n\n"
                                             "Remember to save changes.", parent=self.master)
 
-    def set_ongoing_rows(self):
+    def set_ongoing_row(self):
         """
         changed the number of rows in the ongoing ListBox
         :return: None
@@ -1017,7 +1020,8 @@ class App2:
     this is just a text window that displays the text from the info file
     """
     def __init__(self, master):
-        textbox = Text(master, height=28, width=40)
+        self.theme = app0.theme
+        textbox = Text(master, height=28, width=40, bg=self.theme.bg, fg=self.theme.fg) # define widget
         textbox.pack()
         for line in settings.info[:-1]:  # settings.info is a list of string that i want to display
             textbox.insert(END, line + '\n')  # adds each element from the settings.info list to the widget
@@ -1026,21 +1030,16 @@ class App2:
 
 # ----------------------------------------------------------------------------------------------------- Global variables
 if __name__ == "__main__":
-    settings = Settings()
-    root0 = Tk()
-    app0 = App0(root0)
-    root0.protocol("WM_DELETE_WINDOW", app0.ask_save)
-    root0.resizable(0, 0)
-    root0.mainloop()
+    settings = Settings()  # global variable because it is used globally
+    root = Tk()
+    app0 = App0(root)  # Main window
+    root.protocol("WM_DELETE_WINDOW", app0.ask_save)  # defined what happens when app is quit with the window 'x'
+    root.resizable(0, 0)  # prevents app from being scaled up
+    root.mainloop()
 
 # ------------------------------------------------------------------------------------------------------------------TODO
-# TODO: when restoring settings the session button does not change
-# TODO: settings.first_time_opened
-# TODO: find a clever way of saving the appearance
-# TODO: change colour settings
-# TODO: documentation for the theme class
-# TODO: finish class theme
-# TODO: update info file
-# TODO: appearance of the options menu button
+# TODO: when restoring settings the session button does not change.
+# TODO: make text display differently when in total vs session mode.
+# TODO: exiting settings app without saving and then reopening will cause the save button to appear saved
 
 sys.exit()

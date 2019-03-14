@@ -1,0 +1,4 @@
+fg_#ffffff
+bg_#00c27f
+bg2_#00b26c
+red_#c21234

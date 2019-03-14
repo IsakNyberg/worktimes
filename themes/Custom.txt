@@ -1,0 +1,8 @@
+fg_#123456
+bg_#abcdef
+bg2_#abc123
+red_#654321
+This file is here co create custom themes. These Values are stored in hexadecimal and can be changed. 
+Be careful not to change the formatting. If the file cannot be read the app will use the default theme.
+fg is the text colour, bg is the primary background colour, bg2 is the secondary background colour.
+red is the colour of the save button when the program is unsaved.
