@@ -142,7 +142,10 @@ license needs to be entered. it this
 is a concern, please reach out to:
 kjell@nyberg.dev
 for more information.
-
+ 
+Source code:
+https://github.com/IsakNyberg/worktimes
+ 
 #--------------------------------------#
 #              Good Luck               #
 #                                      #
