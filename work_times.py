@@ -444,7 +444,8 @@ class App0:
         self.options_listbox = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken",
                                 "selectbackground": fg, "selectforeground": bg}
         self.options_frame = {"bg": bg, "borderwidth": 2, "relief": "flat"}
-        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken", "width": 21}
+        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken", "width": 21,
+                              "insertbackground": fg, "selectbackground": fg, "selectforeground": bg}
         self.options_label = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "flat"}
         self.options_label_frame = {"bg": bg, "fg": fg, "borderwidth": 0, "relief": "flat"}
         #  -------------- Master configuration
@@ -466,12 +467,13 @@ class App0:
         self.start_stop_button.grid(row=0, column=3)
         self.refresh_button = Button(self.frame, text="⚙", command=self.open_settings)
         self.refresh_button.grid(row=0, column=5)
-        self.add_button = Button(self.frame, text="Add", command=self.add)
-        self.add_button.grid(row=1, column=5)
         self.entry_label = Label(self.frame, text="New Task:")
         self.entry_label.grid(row=1, column=0)
-        self.entry = Entry(self.frame)
-        self.entry.grid(row=1, column=1, columnspan=4, sticky=E + W)
+        self.entry_task_name = Entry(self.frame)
+        self.entry_task_name.grid(row=1, column=1, columnspan=4, sticky=E + W)
+        self.entry_task_name.bind('<Return>', self.add)  # this causes the task to be added when you press enter
+        self.add_button = Button(self.frame, text="Add", command=self.add)
+        self.add_button.grid(row=1, column=5)
         #  -------------- The Two Listboxes
         self.ongoing_label_frame = LabelFrame(self.frame, text="Ongoing")
         self.ongoing_label_frame.grid(columnspan=6, sticky=E + W + S + N)
@@ -487,7 +489,7 @@ class App0:
         self.all_button = [self.save_button, self.start_stop_button, self.sort_time_button, self.refresh_button,
                            self.add_button, self.sort_abc_button]
         self.all_frame = [self.frame]
-        self.all_entry = [self.entry]
+        self.all_entry = [self.entry_task_name]
         self.all_label = [self.entry_label]
         self.all_listbox = [self.ongoing, self.paused]
         self.all_label_frame = [self.paused_label_frame, self.ongoing_label_frame]
@@ -596,6 +598,7 @@ class App0:
                 paused_bg1, paused_bg2 = paused_bg2, paused_bg1
         self.is_saved()
 
+    # noinspection PyAttributeOutsideInit, PyAttributeOutsideInit
     def open_settings(self):
         """
         Opens the settings window using Toplevel
@@ -660,12 +663,15 @@ class App0:
         self.sorted = '321' if self.sorted == '123' else '123'
         self.update()
 
-    def add(self):
+    # noinspection PyUnusedLocal
+    def add(self, argument=0):
         """
         Adds task to TaskList and ListBox, while checking for: valid entry, name collusion, full version
+        :param argument: does Nothing, the argument is only there so that the bind for the entry to work
+        with 2 arguments.
         :return: None but appends new task to paused ListBox
         """
-        task_name = self.entry.get()
+        task_name = self.entry_task_name.get()
         if len(task_name) == 0:  # Checks if entry field is empty
             return False
         if self.worktasks.in_task_list(task_name):  # Checks for duplicates
@@ -686,7 +692,7 @@ class App0:
             return False
         task = Task(task_name)  # Creates new task
         self.worktasks.append_task(task)  # adds new task to TaskList class
-        self.entry.delete(0, 'end')  # Deletes entry-field
+        self.entry_task_name.delete(0, 'end')  # Deletes entry-field
         self.saved = False
         self.update()  # this update should also append the task to the app0 ListBox
 
@@ -737,6 +743,7 @@ class App0:
             self.saved = False
             self.update()
 
+    # noinspection PyAttributeOutsideInit, PyAttributeOutsideInit
     def show_info(self):
         self.info_window = Toplevel(self.master)   # must be defined outside __init__ else it will appear on startup
         self.app2 = App2(self.info_window)
@@ -769,7 +776,8 @@ class App1:
         bg2 = self.theme.bg2
         self.options_button = {"bg": bg2, "fg": fg, "borderwidth": 1, "relief": "raised", "activebackground": fg,
                                "activeforeground": bg, "pady": 0, "padx": 2, "width": 20}
-        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken", "width": 25}
+        self.options_entry = {"bg": bg, "fg": fg, "borderwidth": 1, "relief": "sunken", "width": 25,
+                              "insertbackground": fg, "selectbackground": fg, "selectforeground": bg}
         self.options_label_frame = {"bg": bg, "fg": fg, "borderwidth": 0, "relief": "flat"}
 
         self.label_show_session = LabelFrame(self.frame, text="Sessions:", bg=bg, fg=fg)
@@ -790,10 +798,12 @@ class App1:
         self.button_ongoing_rows.grid(row=4, column=0)
         self.entry_ongoing_rows = Entry(self.label_app_and_use)
         self.entry_ongoing_rows.grid(row=4, column=1, columnspan=2)
+        self.entry_ongoing_rows.bind('<Return>', self.set_ongoing_row)  # bind enter key
         self.button_paused_rows = Button(self.label_app_and_use, text="Set paused rows", command=self.set_paused_rows)
         self.button_paused_rows.grid(row=5, column=0)
         self.entry_paused_rows = Entry(self.label_app_and_use)
         self.entry_paused_rows.grid(row=5, column=1, columnspan=2)
+        self.entry_paused_rows.bind('<Return>', self.set_paused_rows)  # bind enter key
         self.button_warning = Button(self.label_app_and_use, text=text_warning_button, command=self.warning_dialog)
         self.button_warning.grid(row=6, column=0)
 
@@ -803,6 +813,7 @@ class App1:
         self.button_add_key.grid(row=11, column=0)
         self.entry_key = Entry(self.label_license)
         self.entry_key.grid(row=11, column=1)
+        self.entry_key.bind('<Return>', self.add_key)
 
         self.label_info_save = LabelFrame(self.frame, text="Info, Save, Remove task and Restore Settings:")
         self.label_info_save.grid(row=12, column=0,  columnspan=2)
@@ -909,9 +920,11 @@ class App1:
         messagebox.showinfo("Theme Update", "Theme has been changed, a restart is required to see full effect.\n\n"
                                             "Remember to save changes.", parent=self.master)
 
-    def set_ongoing_row(self):
+    # noinspection PyUnusedLocal
+    def set_ongoing_row(self, argument=0):
         """
-        changed the number of rows in the ongoing ListBox
+        Changed the number of rows in the ongoing ListBox
+        :param argument: Not used, ony there so method can take 2 parameters
         :return: None
         """
         try:
@@ -922,9 +935,11 @@ class App1:
         self.saved = False
         self.is_saved()
 
-    def set_paused_rows(self):
+    # noinspection PyUnusedLocal
+    def set_paused_rows(self, argument=0):
         """
         changes the number of rows in the paused ListBox
+        :param argument: Not used, ony there so method can take 2 parameters
         :return: None
         """
         try:
@@ -991,9 +1006,11 @@ class App1:
             self.master.destroy()
             return
 
-    def add_key(self) -> bool:
+    # noinspection PyUnusedLocal
+    def add_key(self, argument=0) -> bool:
         """
         Compares the key from the entry field with the valid ones using the comparision of hashes.
+        :param argument: Not used, ony there so method can take 2 parameters
         :return: bool if key was successfully added
         """
         if len(self.entry_key.get()) == 0:  # if field it empty do nothing
@@ -1021,7 +1038,7 @@ class App2:
     """
     def __init__(self, master):
         self.theme = app0.theme
-        textbox = Text(master, height=28, width=40, bg=self.theme.bg, fg=self.theme.fg) # define widget
+        textbox = Text(master, height=28, width=40, bg=self.theme.bg, fg=self.theme.fg)  # define widget
         textbox.pack()
         for line in settings.info[:-1]:  # settings.info is a list of string that i want to display
             textbox.insert(END, line + '\n')  # adds each element from the settings.info list to the widget
@@ -1041,5 +1058,7 @@ if __name__ == "__main__":
 # TODO: when restoring settings the session button does not change.
 # TODO: make text display differently when in total vs session mode.
 # TODO: exiting settings app without saving and then reopening will cause the save button to appear saved
+# TODO: fix the thing with the invalid number of arguments when you press <Return> in the entry fields
+
 
 sys.exit()
