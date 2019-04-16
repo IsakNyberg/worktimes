@@ -21,7 +21,7 @@ class TaskList:
     def get_list(self):
         return self.allTasks
 
-    def append_task(self, task):
+    def append_task(self, task  ):
         self.allTasks.append(task)
 
     def remove_task(self, task):
@@ -386,27 +386,27 @@ class Theme:
         :param theme_name: str of the name of the theme
         """
         self.available_themes = ['Default', 'Red', 'Green', 'Pink', 'Black', 'White', 'Grey', 'Custom']
-        if theme_name not in self.available_themes:  # list of themes
+        if theme_name not in self.available_themes:  # list of themes that already exist, hardcoded value
             theme_name = 'Default'
         self.theme_name = theme_name
         if settings.windows:  # windows or mac
             self.path_theme = os.path.join(os.path.dirname(settings.path), "worktimes\\themes\\"+theme_name+".txt")
         else:
             self.path_theme = os.path.join(os.path.dirname(settings.path), "worktimes/themes/"+theme_name+".txt")
-        theme = []  # the string from the file
+        theme = []  # the string from the file split by '_'
         try:
             with open(self.path_theme, 'r') as theme_file:
                 for line in theme_file:
                     theme.append(line.rstrip().split("_"))
-            self.fg = theme[0][1]
+            self.fg = theme[0][1]  # hardcoded positions from text file
             self.bg = theme[1][1]
             self.bg2 = theme[2][1]
             self.red = theme[3][1]
 
             colours = [self.fg, self.bg, self.bg2, self.red]
-            for colour in colours:
-                if len(colour) != 7 or colour[0] != '#':
-                    raise ValueError  # checking if all colours are hexadecimal #ff0011
+            for colour in colours:  # checking if all colours are hexadecimal #aabbcc
+                if len(colour) != 7 or colour[0] != '#':  # De Morgans law is actually useful
+                    raise ValueError
                 if any([character not in "1234567890abcdef" for character in colour[1:]]):
                     raise ValueError
 
@@ -415,7 +415,7 @@ class Theme:
 
     def theme_default(self):
         """
-        sets default theme from hardcoded values
+        sets default theme from hardcoded values. The defaluf theme is blue.
         :return: None but changes the class options
         """
         self.fg = '#ffffff'
@@ -500,11 +500,12 @@ class App0:
 
     def startup(self):
         """
-        This function is only here so i can minimize it in PyCharm. This is the ugliest method in the file.
+        This function is only here so i can minimize it in PyCharm.
+        This is the ugliest method in the file, you are not meant to look at.
         :return: None or raises errors
         """
         # You're not meant to look at it, simply acknowledge that it works, and don't question how.
-        for widget in self.all_button:  # apparently you can make a class Button instead but now its too late
+        for widget in self.all_button:  # apparently you can make a class Button instead of this, but now its too late
             widget.configure(self.options_button)
         for widget in self.all_listbox:
             widget.configure(self.options_listbox)
@@ -536,7 +537,7 @@ class App0:
                                                       "This will cause any previous data to be lost.")
         except (UnicodeDecodeError, ValueError, IndexError):
             # when fails to load tasks, program closes in order to make sure that the previous data isn't lost.
-            create_new_savefile = messagebox.askyesno("Save file corrupt",
+            create_new_savefile = messagebox.askyesno("Save file corrupted",
                                                       "Could not read save file due to unexpected character "
                                                       "or formatting.\n" +
                                                       "do you wish to make a new one?\n"
@@ -551,7 +552,7 @@ class App0:
         quit()
         # -------------------------------------------------------------------------------------------- First time prompt
         if len(self.worktasks) + settings.last_save == 0:  # if no tasks and have never been saved generate greeting
-            self.master.update()
+            self.master.update()  # this is sometimes needed before messageboxes
             new_user = messagebox.askyesno("Welcome!",
                                            "Thank you for using Work Times!\nIs this your first time using this App?",
                                            parent=self.master)
@@ -563,7 +564,7 @@ class App0:
     @staticmethod
     def to_task_name(selection):
         """
-        reformat ListBox format to only the taskname
+        Reformat ListBox format to only the taskname
         :param selection: A selection object from the listbox
         :return: str returns name of the selected task.
         """
@@ -654,14 +655,28 @@ class App0:
             return
 
     def sort_abc(self):
+        """
+        Sorts the tasks in the ListBoxes alphabetically
+        :return: None
+        """
         self.worktasks.sort_alphabetically(self.sorted == "abc")
+        # This sorts the task in the TaskList, ascending or descending is determines by how it was previously sorted
         self.sorted = 'cba' if self.sorted == 'abc' else 'abc'
+        # This variable stores which direction the TaskList is stored in so that it can be reversed
         self.update()
+        # The update part is the part that actually sorts the ListBox
 
     def sort_time(self):
+        """
+        Sorts the tasks in the ListBoxes by time spent
+        :return: None
+        """
         self.worktasks.sort_time(self.sorted != "123")
+        # This sorts the task in the TaskList, ascending or descending is determines by how it was previously sorted
         self.sorted = '321' if self.sorted == '123' else '123'
+        # This variable stores which direction the TaskList is stored in so that it can be reversed
         self.update()
+        # The update part is the part that actually sorts the ListBox
 
     # noinspection PyUnusedLocal
     def add(self, argument=0):
@@ -710,7 +725,6 @@ class App0:
                     messagebox.showerror("No task selected", "To start or stop a task it needs to be selected.",
                                          parent=self.master)
                 return self.is_saved()  # returns with no changes
-
             task_name = self.to_task_name(self.paused.get(selection[0]))  # gets taskname from listbox format
             task = self.worktasks.get_task(task_name)  # gets task object from tasklist using taskname
             task.start_task()
@@ -745,6 +759,10 @@ class App0:
 
     # noinspection PyAttributeOutsideInit, PyAttributeOutsideInit
     def show_info(self):
+        """
+        Shows an info widow using Toplevel
+        :return: None
+        """
         self.info_window = Toplevel(self.master)   # must be defined outside __init__ else it will appear on startup
         self.app2 = App2(self.info_window)
         self.info_window.resizable(0, 0)
