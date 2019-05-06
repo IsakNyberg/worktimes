@@ -9,6 +9,9 @@ import hashlib
 
 # ------------------------------------------------------------------------------------------------------ Task List Class
 class TaskList:
+    """
+    List of Task objects
+    """
     def __init__(self):
         self.allTasks = []
 
@@ -21,7 +24,7 @@ class TaskList:
     def get_list(self):
         return self.allTasks
 
-    def append_task(self, task  ):
+    def append_task(self, task):
         self.allTasks.append(task)
 
     def remove_task(self, task):
@@ -53,7 +56,7 @@ class TaskList:
 
     def in_task_list(self, task_name: str) -> bool:
         """
-        works the same as in for lists
+        Works the same as 'in' for lists
         :param task_name: String, name of a task
         :return: boolean whether there is a task with that name in the TaskList
         """
@@ -63,7 +66,7 @@ class TaskList:
         """
         Returns Task object with name == task_name
         :param task_name: str name of task
-        :return: Task with the name task_name
+        :return: Task with the name task_name, none if not found
         """
         for task in self.allTasks:
             if task.get_name() == task_name:
@@ -112,12 +115,15 @@ class TaskList:
 
 # ----------------------------------------------------------------------------------------------------------- Task class
 class Task:
+    """
+    A task object is an object consisting of 5 variables that are used to monitor time. Each task appears in the app0
+    list with the name and the time displayed.
+    """
     def __init__(self, name, total=0, session=0):
-
-        self.name = name
-        self.total = total
-        self.session = session
-        self.ongoing = False
+        self.name = name  # Name of task
+        self.total = total  # Total Time spent on task. Default = 0
+        self.session = session  # Time spend on session. Default = 0
+        self.ongoing = False  # private bool, true if task is ongoing otherwise false.
         self.start = 0  # the time.time() when a task is started
 
     def __repr__(self):
@@ -188,7 +194,7 @@ class Task:
     @staticmethod
     def format_time(time_seconds: int) -> str:
         """
-        formats seconds to XXh XXm format
+        Formats seconds to XXh XXm format
         :param time_seconds: int time in seconds
         :return: str in the XXh XXm format
         """
