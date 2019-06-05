@@ -25,3 +25,5 @@ Hashes.txt
 .python-version
 .github/
 data.txt
+*.py___jb_tmp___
+*.p
