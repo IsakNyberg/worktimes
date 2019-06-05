@@ -22,3 +22,5 @@ vcruntime140.dll
 kivy_reamake.py
 Hashes.txt
 *.pyc
+.python-version
+.github/
