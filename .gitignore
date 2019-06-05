@@ -21,3 +21,4 @@ vcruntime140.dll
 .idea/dictionaries/isaknyberg.xml
 kivy_reamake.py
 Hashes.txt
+*.pyc
