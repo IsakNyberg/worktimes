@@ -12,6 +12,3 @@ class ThemedButton(Button):
         self['activeforeground'] = theme.bg
         self['pady'] = 0
         self['padx'] = 2
-
-        self.update()
-        super().update()

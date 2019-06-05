@@ -513,9 +513,10 @@ class App0:
         This is the ugliest method in the file, you are not meant to look at.
         :return: None or raises errors
         """
-        # You're not meant to look at it, simply acknowledge that it works, and don't question how.
-        for widget in self.all_button:  # apparently you can make a class Button instead of this, but now its too late
-            widget.configure(self.options_button)
+        if settings.windows:
+            # You're not meant to look at it, simply acknowledge that it works, and don't question how.
+            for widget in self.all_button:  # apparently you can make a class Button instead of this, but now its too late
+                widget.configure(self.options_button)
         for widget in self.all_listbox:
             widget.configure(self.options_listbox)
         for widget in self.all_frame:
