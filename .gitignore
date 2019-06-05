@@ -24,3 +24,4 @@ Hashes.txt
 *.pyc
 .python-version
 .github/
+data.txt
