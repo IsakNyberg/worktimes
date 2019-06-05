@@ -128,15 +128,3 @@ class Task:
         self.session += int(time.time() - self.start)
         self.ongoing = False
         self.start = 0
-
-
-a = Task('a', 10, 10)
-b = Task('b', 0, 10)
-c = Task('c', 10, 0)
-d = Task('d', 0, 0)
-
-aaa = TaskList([a, b])
-print(aaa)
-aaa = TaskList()
-print(aaa)
-aaa.save()
