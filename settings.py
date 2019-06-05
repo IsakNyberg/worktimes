@@ -53,4 +53,3 @@ class Settings:
         """
         with open("settings.p", "rb") as f:
             return pickle.load(f)
-

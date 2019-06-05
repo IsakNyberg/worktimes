@@ -111,7 +111,7 @@ class Task:
         """
         self.session = 0
 
-    def start_task(self):
+    def start(self):
         """
         Records the start time of a task in self.start
         :return: None
