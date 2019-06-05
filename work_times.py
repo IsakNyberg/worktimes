@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # -------------------------------------------------------------------------------------------------------------- imports
 import os
 import time
@@ -456,7 +458,8 @@ class App0:
         self.options_label_frame = {"bg": bg, "fg": fg, "borderwidth": 0, "relief": "flat"}
         #  -------------- Master configuration
         self.master = master
-        self.master.iconbitmap(settings.path_icon)
+        if settings.windows:
+            self.master.iconbitmap(settings.path_icon)
         self.master.title('Work Times')
         self.master.tk_setPalette(background=bg, foreground=bg)
         #  -------------- Main Frame
@@ -784,7 +787,8 @@ class App1:
         self.master = master
         self.frame = Frame(master, borderwidth=1)
         self.frame.grid()
-        self.master.iconbitmap(settings.path_icon)
+        if settings.windows:
+            self.master.iconbitmap(settings.path_icon)
         self.master.title("Settings")
         self.saved = True
 
