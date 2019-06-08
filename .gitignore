@@ -11,3 +11,5 @@ setup.py
 data.p
 settings.p
 .python-version
+venv/
+__pycache__/
