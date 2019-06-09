@@ -39,6 +39,11 @@ class MainWindow(QMainWindow):
         self.hight = 500
         self.setUI()
 
+        # style sheets
+        with open("stylesheets/main.stylesheet", "r") as ss:
+            self.setStyleSheet(ss.read())
+
+
         #self.setWindowIcon(QIcon(svg_path('icon.ico')))
 
         self.saved = True
@@ -85,8 +90,8 @@ class MainWindow(QMainWindow):
         self.top_bar.settings_button.pressed.connect(self.open_settings)
         self.top_bar.add_button.pressed.connect(adder)
 
-        self.ongoing = TaskListerWidget(self, '#603')
-        self.paused = TaskListerWidget(self, 'fred')
+        self.ongoing = TaskListerWidget(self, '#006cb2')
+        self.paused = TaskListerWidget(self, '#006cb2')
 
         layout = QVBoxLayout(main)
         #layout.setContentsMargins(0, 0, 0, 0)
@@ -137,11 +142,11 @@ class MainWindow(QMainWindow):
 
 
 class ButtonState(enum.Enum):
-    PLAY =  '⏸'
+    PLAY = '⏸'
     PAUSE = '▶'
-    DOWN =  '▼'
-    UP =    '▲'
-    NONE =  '□'
+    DOWN = '▼'
+    UP = '▲'
+    NONE = '   '
 
     __TOGGLE__ = {
         PLAY: PAUSE,
@@ -169,9 +174,9 @@ class ControllerWidget(QWidget):
         self.entry_field.setPlaceholderText('New Task')
 
         self.save_button = QPushButton('Save', self)
-        self.sort_button_time = QPushButton('', self) # 🔤 🔠 🔡
+        self.sort_button_time = QPushButton('', self)  # 🔤 🔠 🔡
         self.sort_button_alph = QPushButton(' ', self)
-        self.start_stop_button = QPushButton('', self) # ▶ / ⏸ / ⏹
+        self.start_stop_button = QPushButton('', self)  # ▶ / ⏸ / ⏹
         self.settings_button = QPushButton('⚙', self)
         self.add_button = QPushButton('Add', self)
 
@@ -214,7 +219,7 @@ class ControllerWidget(QWidget):
 
     def update_buttons(self):
         self.start_stop_button.setText(self.playing.value)
-        self.sort_button_time.setText('⏲ ' + self.sorting[Sorts.TIME].value)
+        self.sort_button_time.setText('🕒 ' + self.sorting[Sorts.TIME].value)
         self.sort_button_alph.setText('🔤 ' + self.sorting[Sorts.ALPH].value)
 
 

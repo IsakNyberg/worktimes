@@ -1,0 +1,29 @@
+QMainWindow{
+    background: #007fc2;
+    width: 10px; /* when vertical */
+    height: 10px; /* when horizontal */
+}
+QPushButton {
+    background-color: #006cb2;
+    color: #ffffff;
+    min-height: 20px;
+    border-width: 10px;
+    border-radius: 5px;
+    font: 14px;
+    margin: 0px;
+    padding: 2px;
+}
+
+QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #dadbde, stop: 1 #f6f7fa);
+    color: #60aef2;
+}
+
+QPushButton:flat {
+    border: none;
+}
+
+QPushButton:default {
+    border-color: navy;
+}
