@@ -1,4 +1,0 @@
-fg_#ffffff
-bg_#007fc2
-bg2_#006cb2
-red_#c21234
