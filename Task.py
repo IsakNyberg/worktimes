@@ -2,27 +2,34 @@ import time
 
 
 # ------------------------------------------------------------------------------------------------------ Task List Class
-class TaskList:
+class TaskList(list):
     """
     List of Task objects
     """
     def __init__(self):
-        self.tasks = []
         self.session = True
         self.data_path = 'data.txt'
         self.last_save = time.time()
 
     def __len__(self) -> int:
-        return len(self.tasks)
+        return len(self)
 
     def __repr__(self) -> str:
-        return str(self.tasks)
+        return str([task for task in self])
 
-    def get_list(self):
-        return self.tasks
+    def get_ongoing(self):
+        return [task for task in self if task.ongoing]
+
+    def get_paused(self):
+        return [task for task in self if not task.ongoing]
+
+    def append_new_task(self, name):
+        if self.get_task(name):
+            raise ValueError("Task with name")
+        self.append(Task(name))
 
     def append_task(self, task):
-        self.tasks.append(task)
+        self.append(task)
 
     def remove_task(self, task):
         self.tasks.remove(task)
@@ -65,8 +72,8 @@ class TaskList:
         :param task_name: str name of task
         :return: Task with the name task_name, none if not found
         """
-        for task in self.tasks:
-            if task.get_name() == task_name:
+        for task in self:
+            if task.name == task_name:
                 return task
         return None
 
@@ -126,10 +133,13 @@ class Task:
     def __repr__(self):
         return str(self.name)
 
+    def get_info(self):
+        return [self.name, self.format_time(self.session), self.format_time(self.total)]
+
     def new_session(self):
         self.session = 0
 
-    def start(self):
+    def start_task(self):
         """
         Records the start time of a task in self.start
         :return: None
@@ -137,7 +147,7 @@ class Task:
         self.start = int(time.time())
         self.ongoing = True
 
-    def stop(self):
+    def stop_task(self):
         """
         Adds the spent time of an ongoing task to total and session
         :return: None
