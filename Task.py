@@ -23,9 +23,13 @@ class TaskList(list):
     def get_paused(self):
         return [task for task in self if not task.ongoing]
 
+    def update(self):
+        for task in self.get_ongoing():
+            task.update()
+
     def append_new_task(self, name):
         if self.get_task(name):
-            raise ValueError("Task with name")
+            raise ValueError("Already task with name {0}".format(name))
         self.append(Task(name))
 
     def append_task(self, task):
@@ -138,6 +142,11 @@ class Task:
 
     def new_session(self):
         self.session = 0
+
+    def update(self):
+        if self.ongoing:
+            self.stop_task()
+            self.start_task()
 
     def start_task(self):
         """

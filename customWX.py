@@ -1,6 +1,16 @@
 import wx
 
 
+class Timer(wx.Timer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class TextCtrl(wx.TextCtrl):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 class Button(wx.Button):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -27,20 +37,48 @@ class ListCtrl(wx.ListCtrl):
         self.AppendColumn('Session', wx.LIST_FORMAT_RIGHT, 50)
         self.AppendColumn('Total', wx.LIST_FORMAT_RIGHT, 50)
 
-    def add_task_list(self, tasklist):
+    def add_task_list(self, tasklist):  # the tasklist can either be a list of task or a tasklist object
         for task in tasklist:
             self.add_task(task)
 
     def add_task(self, task):
         task_info = task.get_info()
-        pos = self.InsertItem(0, task_info[0])
-        self.SetItem(pos, 1, task_info[1])
-        self.SetItem(pos, 2, task_info[2])
+        row = self.InsertItem(0, task_info[0])
+        self.SetItem(row, 1, task_info[1])
+        self.SetItem(row, 2, task_info[2])
 
     def get_selected_tasks(self):
         select_count = self.GetSelectedItemCount()
+        index = self.GetFirstSelected()
         selected_tasks = []
         for item in range(select_count):
-            choice = self.GetFirstSelected()
-            selected_tasks.append(self.GetItem(itemIdx=choice, col=0))
+            selected_tasks.append(self.GetItem(itemIdx=index, col=0).GetText())
+            index = self.GetNextSelected(index)
+
         return selected_tasks
+
+    def get_tasknames(self):
+        tasknames = []
+        for row in range(self.GetItemCount()):
+            tasknames.append(self.GetItem(itemIdx=row, col=0).GetText())
+        return tasknames
+
+    def update(self, tasklist):
+        # Makes the two lists equal length
+        len_dif = self.GetItemCount() - len(tasklist)
+        if len_dif > 0:
+            for index in range(len_dif):
+                self.DeleteItem(0)
+        elif len_dif < 0:
+            for index in range(-len_dif):
+                self.add_task(tasklist[index])
+
+        # populate the table
+        row = 0
+        for task in tasklist:
+            task_info = task.get_info()
+            self.SetItem(row, 0, task_info[0])
+            self.SetItem(row, 1, task_info[1])
+            self.SetItem(row, 2, task_info[2])
+            row += 1
+
