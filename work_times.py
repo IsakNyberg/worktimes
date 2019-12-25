@@ -20,7 +20,9 @@ class App(wx.Dialog):
         self.entry_1 = CWX.TextCtrl(self, wx.ID_ANY, "")
         self.button_3 = CWX.Button(self, wx.ID_ANY, "Add")
         self.button_3.Bind(wx.EVT_BUTTON, self.add_task)
-        self.button_4 = CWX.Button(self, wx.ID_ANY, "Settings")
+        self.button_4 = CWX.Button(self, wx.ID_ANY, "Save")
+        self.button_4.Bind(wx.EVT_BUTTON, self.save)
+        self.button_5 = CWX.Button(self, wx.ID_ANY, "Settings")
         self.ongoing_list = CWX.ListCtrl(self, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
         self.paused_list = CWX.ListCtrl(self, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
         self.__do_layout()
@@ -40,6 +42,7 @@ class App(wx.Dialog):
         sizer_2.Add(self.entry_1, 0, 0, 0)
         sizer_2.Add(self.button_3, 0, 0, 0)
         sizer_2.Add(self.button_4, 0, 0, 0)
+        sizer_2.Add(self.button_5, 0, 0, 0)
         sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
         sizer_1.Add(self.ongoing_list, 1, wx.EXPAND, 0)
         sizer_1.Add(self.paused_list, 1, wx.EXPAND, 0)
@@ -63,6 +66,11 @@ class App(wx.Dialog):
                 task.stop_task()
             else:
                 task.start_task()
+        self.update(event)
+        return event
+
+    def save(self, event):
+        TASKS.save()
         self.update(event)
         return event
 

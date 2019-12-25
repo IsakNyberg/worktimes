@@ -29,6 +29,12 @@ class TaskList(list):
         for task in self.get_ongoing():
             task.update()
 
+    def rename_task(self, old_name, new_name):
+        if self.in_task_list(new_name):
+            raise ValueError("Rename error. Already task with name {0}".format(new_name))
+
+        self.get_task(old_name).name = new_name
+
     def append_new_task(self, name):
         if self.get_task(name):
             raise ValueError("Already task with name {0}".format(name))
@@ -37,8 +43,8 @@ class TaskList(list):
     def append_task(self, task):
         self.append(task)
 
-    def remove_task(self, task):
-        self.tasks.remove(task)
+    def remove_task(self, taskname):
+        self.remove(self.get_task(taskname))
 
     def sort_alphabetically(self):
         """
@@ -108,10 +114,10 @@ class TaskList(list):
         """
         open(self.data_path, 'w').close()  # delete old file
         write = ""
-        for task in self.get_list():  # makes one massive string following the save format
-            write += task.get_name() + "_" + str(task.get_total()) + "_" + str(task.get_session()) + "\n"
+        for task in self:  # makes one massive string following the save format
+            write += "{0}_{1}_{2}\n".format(task.name, task.total, task.session)
         with open(self.data_path, "a") as saveFile:  # recreate new file
-            self.data_path.write(write)  # puts massive string in file
+            saveFile.write(write)  # puts massive string in file
         self.last_save = time.time()
 
     def import_tasks(self):
@@ -179,11 +185,11 @@ class Task:
             self.stop()
             self.start()
 
-        time_seconds = self.format_time(self.total)
+        formatted_time = self.format_time(self.total)
         if session:
-            time_seconds = self.format_time(self.session)
+            formatted_time = self.format_time(self.session)
 
-        return self.name + " " + time_seconds
+        return "{0} {1}".format(self.name, formatted_time)
 
     @staticmethod
     def format_time(time_seconds: int) -> str:
@@ -192,14 +198,14 @@ class Task:
         :param time_seconds: int time in seconds
         :return: str in the XXh XXm format
         """
-        days = str(int(time_seconds / 86400))
-        hours = str(int((time_seconds % 86400) / 3600))
-        minutes = str(int((time_seconds % 3600) / 60))
+        days = int(time_seconds / 86400)
+        hours = int((time_seconds % 86400) / 3600)
+        minutes = int((time_seconds % 3600) / 60)
         if time_seconds >= 3600:
             if time_seconds >= 86400:
-                return days + "D " + hours + "H " + minutes + "M"
+                return "{0}D {1}H {2}M".format(days, hours, minutes)
             else:
-                return hours + "H " + minutes + "M"
+                return "{1}H {2}M".format(hours, minutes)
         else:
-            return minutes + "M"
+            return "{0}M".format(minutes)
 

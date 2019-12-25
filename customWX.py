@@ -54,8 +54,13 @@ class ListCtrl(wx.ListCtrl):
         for item in range(select_count):
             selected_tasks.append(self.GetItem(itemIdx=index, col=0).GetText())
             index = self.GetNextSelected(index)
-
+        self.deselect_all()
         return selected_tasks
+
+    def deselect_all(self):
+        for row in range(self.GetItemCount()):
+            if self.IsSelected(row):
+                self.Select(row, 0)
 
     def get_tasknames(self):
         tasknames = []
