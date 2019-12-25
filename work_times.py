@@ -25,9 +25,13 @@ class App(wx.Dialog):
         self.paused_list = CWX.ListCtrl(self, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
         self.__do_layout()
 
+        self.paused_list.Bind(wx.EVT_LIST_COL_CLICK, self.sort)
+        self.ongoing_list.Bind(wx.EVT_LIST_COL_CLICK, self.sort)
+
         self.timer = CWX.Timer(self)
         self.Bind(wx.EVT_TIMER, self.update, self.timer)
-        self.timer.Start(200)
+        self.update()
+        self.timer.Start(20000)
 
     def __do_layout(self):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -43,6 +47,12 @@ class App(wx.Dialog):
         sizer_1.Fit(self)
         self.Layout()
 
+    def update(self, event=None):
+        TASKS.update()
+        self.paused_list.update(TASKS.get_paused())
+        self.ongoing_list.update(TASKS.get_ongoing())
+        return event
+
     def start_stop_task(self, event):
         tasknames = []
         tasknames += self.ongoing_list.get_selected_tasks()
@@ -53,17 +63,23 @@ class App(wx.Dialog):
                 task.stop_task()
             else:
                 task.start_task()
+        self.update(event)
         return event
 
     def add_task(self, event):
         taskname = self.entry_1.GetValue()
+        self.entry_1.SetValue("")
         TASKS.append_new_task(taskname)
+        self.update(event)
         return event
 
-    def update(self, event):
-        TASKS.update()
-        self.paused_list.update(TASKS.get_paused())
-        self.ongoing_list.update(TASKS.get_ongoing())
+    def sort(self, event):
+        column = event.GetColumn()
+        if column == 0:
+            TASKS.sort_alphabetically()
+        else:
+            TASKS.sort_time(column == 1)
+        self.update(event)
         return event
 
 

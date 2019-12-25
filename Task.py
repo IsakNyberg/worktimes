@@ -11,6 +11,8 @@ class TaskList(list):
         self.data_path = 'data.txt'
         self.last_save = time.time()
 
+        self.sorted = False
+
     def __len__(self) -> int:
         return len(self)
 
@@ -38,23 +40,25 @@ class TaskList(list):
     def remove_task(self, task):
         self.tasks.remove(task)
 
-    def sort_alphabetically(self, reverse: bool):
+    def sort_alphabetically(self):
         """
         sorts TaskList alphabetically a-z or z-a
-        :param reverse: boolean whether a-z or z-a
         :return: None
         """
-        self.tasks.sort(key=lambda task: task.get_name(), reverse=reverse)
+        self.sort(key=lambda task: task.name, reverse=self.sorted)
+        self.sorted = not self.sorted
 
-    def sort_time(self, reverse):
+    def sort_time(self, session=False):
         """
         sorts TaskList by the recorded time ascending or descending
-        :param reverse: boolean whether ascending or descending
+        highest task is at the top.
+        :param session: boolean whether session or total
         :return:
         """
-        self.tasks.sort(key=lambda task: task.get_total(), reverse=reverse)
-        if self.session:
-            self.tasks.sort(key=lambda task: task.get_session(), reverse=reverse)
+        self.sort(key=lambda task: task.total, reverse=self.sorted)
+        if session:
+            self.sort(key=lambda task: task.session, reverse=self.sorted)
+        self.sorted = not self.sorted
 
     def is_ongoing(self) -> bool:
         """
