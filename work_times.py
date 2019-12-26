@@ -22,7 +22,9 @@ class App(wx.Dialog):
         self.button_3.Bind(wx.EVT_BUTTON, self.add_task)
         self.button_4 = CWX.Button(self, wx.ID_ANY, "Save")
         self.button_4.Bind(wx.EVT_BUTTON, self.save)
-        self.button_5 = CWX.Button(self, wx.ID_ANY, "Settings")
+        self.button_5 = CWX.Button(self, wx.ID_ANY, "Remove")
+        self.button_5.Bind(wx.EVT_BUTTON, self.remove)
+        self.button_6 = CWX.Button(self, wx.ID_ANY, "Settings")
         self.ongoing_list = CWX.ListCtrl(self, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
         self.paused_list = CWX.ListCtrl(self, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
         self.__do_layout()
@@ -43,6 +45,7 @@ class App(wx.Dialog):
         sizer_2.Add(self.button_3, 0, 0, 0)
         sizer_2.Add(self.button_4, 0, 0, 0)
         sizer_2.Add(self.button_5, 0, 0, 0)
+        sizer_2.Add(self.button_6, 0, 0, 0)
         sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
         sizer_1.Add(self.ongoing_list, 1, wx.EXPAND, 0)
         sizer_1.Add(self.paused_list, 1, wx.EXPAND, 0)
@@ -74,6 +77,15 @@ class App(wx.Dialog):
         self.update(event)
         return event
 
+    def remove(self, event):
+        tasknames = []
+        tasknames += self.ongoing_list.get_selected_tasks()
+        tasknames += self.paused_list.get_selected_tasks()
+        for taskname in tasknames:
+            TASKS.remove_task(taskname)
+        self.update(event)
+        return event
+
     def add_task(self, event):
         taskname = self.entry_1.GetValue()
         self.entry_1.SetValue("")
@@ -82,6 +94,8 @@ class App(wx.Dialog):
         return event
 
     def sort(self, event):
+        self.ongoing_list.deselect_all()
+        self.paused_list.deselect_all()
         column = event.GetColumn()
         if column == 0:
             TASKS.sort_alphabetically()

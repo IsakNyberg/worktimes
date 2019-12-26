@@ -44,7 +44,10 @@ class TaskList(list):
         self.append(task)
 
     def remove_task(self, taskname):
-        self.remove(self.get_task(taskname))
+        task = self.get_task(taskname)
+        if task.ongoing:
+            raise ValueError("An ongoing task cannot be removed")
+        self.remove(task)
 
     def sort_alphabetically(self):
         """
