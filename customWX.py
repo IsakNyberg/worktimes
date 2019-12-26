@@ -36,7 +36,7 @@ class ListCtrl(wx.ListCtrl):
         self.AppendColumn('Name', wx.LIST_FORMAT_LEFT, 200)
         self.AppendColumn('Session', wx.LIST_FORMAT_RIGHT, 50)
         self.AppendColumn('Total', wx.LIST_FORMAT_RIGHT, 50)
-        self.SetColumnWidth(0, 300)
+        self.SetColumnWidth(0, 200)
         self.SetColumnWidth(1, 75)
         self.SetColumnWidth(2, 75)
 

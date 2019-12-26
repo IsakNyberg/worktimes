@@ -208,7 +208,7 @@ class Task:
             if time_seconds >= 86400:
                 return "{0}D {1}H {2}M".format(days, hours, minutes)
             else:
-                return "{1}H {2}M".format(hours, minutes)
+                return "{0}H {1}M".format(hours, minutes)
         else:
             return "{0}M".format(minutes)
 

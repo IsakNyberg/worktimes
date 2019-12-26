@@ -15,19 +15,31 @@ class App(wx.Dialog):
         wx.Dialog.__init__(self, *args, **kwargs)
         self.SetTitle("WorkTimes")
 
-        self.button_1 = CWX.Button(self, wx.ID_ANY, "Start | Stop")
+        self.button_1 = CWX.Button(self, wx.ID_ANY, "Start | Stop", style=wx.BU_EXACTFIT)
+        self.button_1.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_TICK_MARK, wx.ART_MENU))
         self.button_1.Bind(wx.EVT_BUTTON, self.start_stop_task)
+
         self.entry_1 = CWX.TextCtrl(self, wx.ID_ANY, "")
-        self.button_3 = CWX.Button(self, wx.ID_ANY, "Add")
+
+        self.button_3 = CWX.Button(self, wx.ID_ANY, "", style=wx.BU_EXACTFIT)
+        self.button_3.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_PLUS, wx.ART_MENU))
         self.button_3.Bind(wx.EVT_BUTTON, self.add_task)
-        self.button_4 = CWX.Button(self, wx.ID_ANY, "Save")
-        self.button_4.Bind(wx.EVT_BUTTON, self.save)
-        self.button_5 = CWX.Button(self, wx.ID_ANY, "Remove")
-        self.button_5.Bind(wx.EVT_BUTTON, self.remove)
-        self.button_6 = CWX.Button(self, wx.ID_ANY, "Settings")
+
+        self.button_4 = CWX.Button(self, wx.ID_ANY, "", style=wx.BU_EXACTFIT)
+        self.button_4.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_MINUS, wx.ART_MENU))
+        self.button_4.Bind(wx.EVT_BUTTON, self.remove)
+
+        self.button_5 = CWX.Button(self, wx.ID_ANY, "", style=wx.BU_EXACTFIT)
+        self.button_5.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_FLOPPY, wx.ART_MENU))
+        self.button_5.Bind(wx.EVT_BUTTON, self.save)
+
+        self.button_6 = CWX.Button(self, wx.ID_ANY, "", style=wx.BU_EXACTFIT)
+        self.button_6.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, wx.ART_MENU))
+
         self.ongoing_list = CWX.ListCtrl(self, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
         self.paused_list = CWX.ListCtrl(self, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
         self.__do_layout()
+
 
         self.paused_list.Bind(wx.EVT_LIST_COL_CLICK, self.sort)
         self.ongoing_list.Bind(wx.EVT_LIST_COL_CLICK, self.sort)
@@ -46,7 +58,7 @@ class App(wx.Dialog):
         sizer_2.Add(self.button_4, 0, 0, 0)
         sizer_2.Add(self.button_5, 0, 0, 0)
         sizer_2.Add(self.button_6, 0, 0, 0)
-        sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
+        sizer_1.Add(sizer_2, 0, 1, 0)
         sizer_1.Add(self.ongoing_list, 1, wx.EXPAND, 0)
         sizer_1.Add(self.paused_list, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
@@ -88,6 +100,8 @@ class App(wx.Dialog):
 
     def add_task(self, event):
         taskname = self.entry_1.GetValue()
+        if taskname == "":
+            return event
         self.entry_1.SetValue("")
         TASKS.append_new_task(taskname)
         self.update(event)
