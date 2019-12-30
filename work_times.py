@@ -37,12 +37,14 @@ class App(wx.Dialog):
         self.button_6.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, wx.ART_MENU))
 
         self.ongoing_list = CWX.ListCtrl(self, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
-        self.paused_list = CWX.ListCtrl(self, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
-        self.__do_layout()
-
-
-        self.paused_list.Bind(wx.EVT_LIST_COL_CLICK, self.sort)
         self.ongoing_list.Bind(wx.EVT_LIST_COL_CLICK, self.sort)
+        self.ongoing_list.Bind(wx.EVT_LIST_ITEM_SELECTED, self.deselect_other)
+
+        self.paused_list = CWX.ListCtrl(self, wx.ID_ANY, style=wx.LC_HRULES | wx.LC_REPORT | wx.LC_VRULES)
+        self.paused_list.Bind(wx.EVT_LIST_COL_CLICK, self.sort)
+        self.paused_list.Bind(wx.EVT_LIST_ITEM_SELECTED, self.deselect_other)
+
+        self.__do_layout()
 
         self.timer = CWX.Timer(self)
         self.Bind(wx.EVT_TIMER, self.update, self.timer)
@@ -116,6 +118,18 @@ class App(wx.Dialog):
         else:
             TASKS.sort_time(column == 1)
         self.update(event)
+        return event
+
+    def deselect_other(self, event):
+        """
+        This function is here so that an item from both list cannot be selected at the same time
+        :param event:
+        :return:
+        """
+        if event.GetEventObject() is self.paused_list:
+            self.ongoing_list.deselect_all()
+        elif event.GetEventObject() is self.ongoing_list:
+            self.paused_list.deselect_all()
         return event
 
 

@@ -181,8 +181,9 @@ class Task:
 
     def displaytext(self, session) -> str:
         """
-        Returns string in format for the listbox in app0 using magic
-        :return: str in format name + ' ... ' + time
+        Returns the information of the task in string format.
+        For non string format use get_info(self).
+        :return: str in format name + ' ' + time
         """
         if self.ongoing:  # makes sure the self.total is accurate
             self.stop()
@@ -198,17 +199,18 @@ class Task:
     def format_time(time_seconds: int) -> str:
         """
         Formats seconds to XXh XXm format
+        A day is 24 hours not 12 hours
         :param time_seconds: int time in seconds
         :return: str in the XXh XXm format
         """
-        days = int(time_seconds / 86400)
+        days = int(time_seconds / 86400)  # day is 24 hours not 12 hours
         hours = int((time_seconds % 86400) / 3600)
         minutes = int((time_seconds % 3600) / 60)
         if time_seconds >= 3600:
             if time_seconds >= 86400:
-                return "{0}D {1}H {2}M".format(days, hours, minutes)
+                return "{0}d {1}h {2}m".format(days, hours, minutes)
             else:
-                return "{0}H {1}M".format(hours, minutes)
+                return "{0}h {1}m".format(hours, minutes)
         else:
-            return "{0}M".format(minutes)
+            return "{0}m".format(minutes)
 

@@ -60,6 +60,9 @@ class ListCtrl(wx.ListCtrl):
         self.deselect_all()
         return selected_tasks
 
+    def hide_session(self):
+        self.SetColumnWidth(1, 0)
+
     def deselect_all(self):
         for row in range(self.GetItemCount()):
             if self.IsSelected(row):
