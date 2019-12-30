@@ -1,5 +1,6 @@
 import wx
 
+THEME_BLUE = [(0xff, 0xff, 0xff), (0x00, 0x7f, 0xc2), (0x00, 0x6c, 0xb2)]
 
 class Timer(wx.Timer):
     def __init__(self, *args, **kwargs):
@@ -73,6 +74,18 @@ class ListCtrl(wx.ListCtrl):
         for row in range(self.GetItemCount()):
             tasknames.append(self.GetItem(itemIdx=row, col=0).GetText())
         return tasknames
+
+    def apply_theme(self, theme):
+        # TODO
+        text = wx.Colour(*theme[0])
+        background = wx.Colour(*theme[1])
+        self.SetTextColour(text)
+        self.SetBackgroundColour(background)
+
+        # im not sure why the lines below don't work
+        # self.SetHeaderAttr(wx.ItemAttr(text, background))
+        # self.SetAlternateRowColour(wx.Colour(*theme[2]))
+        # self.EnableAlternateRowColours()
 
     def update(self, tasklist):
         # Makes the two lists equal length
