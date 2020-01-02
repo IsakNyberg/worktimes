@@ -16,7 +16,7 @@ class App(wx.Dialog):
         self.SetTitle("WorkTimes")
 
         self.button_1 = CWX.Button(self, wx.ID_ANY, "Start | Stop", style=wx.BU_EXACTFIT)
-        self.button_1.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_TICK_MARK, wx.ART_MENU))
+        self.button_1.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_MENU))
         self.button_1.Bind(wx.EVT_BUTTON, self.start_stop_task)
 
         self.entry_1 = CWX.TextCtrl(self, wx.ID_ANY, "")
@@ -128,8 +128,10 @@ class App(wx.Dialog):
         """
         if event.GetEventObject() is self.paused_list:
             self.ongoing_list.deselect_all()
+            self.button_1.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_GO_UP, wx.ART_MENU))
         elif event.GetEventObject() is self.ongoing_list:
             self.paused_list.deselect_all()
+            self.button_1.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_MENU))
         return event
 
 
