@@ -9,6 +9,7 @@ class TaskList(list):
     def __init__(self):
         self.session = True
         self.data_path = 'data.txt'
+        self.saved = True
         self.last_save = time.time()
 
         self.sorted = False
@@ -34,20 +35,32 @@ class TaskList(list):
             raise ValueError("Rename error. Already task with name {0}".format(new_name))
 
         self.get_task(old_name).name = new_name
+        self.saved = False
 
     def append_new_task(self, name):
         if self.get_task(name):
             raise ValueError("Already task with name {0}".format(name))
         self.append(Task(name))
+        self.saved = False
 
     def append_task(self, task):
         self.append(task)
+        self.saved = False
+
+    def start_stop(self, taskname):
+        task = self.get_task(taskname)
+        if task.ongoing:
+            task.stop_task()
+        else:
+            task.start_task()
+        self.saved = False
 
     def remove_task(self, taskname):
         task = self.get_task(taskname)
         if task.ongoing:
             raise ValueError("An ongoing task cannot be removed")
         self.remove(task)
+        self.saved = False
 
     def sort_alphabetically(self):
         """
@@ -106,6 +119,7 @@ class TaskList(list):
         Sets the session time of all tasks to 0 Does NOT update the app0
         :return: None
         """
+        self.saved = False
         for task in self.tasks:
             task.new_session()
 

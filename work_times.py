@@ -78,11 +78,7 @@ class App(wx.Dialog):
         tasknames += self.ongoing_list.get_selected_tasks()
         tasknames += self.paused_list.get_selected_tasks()
         for taskname in tasknames:
-            task = TASKS.get_task(taskname)
-            if task.ongoing:
-                task.stop_task()
-            else:
-                task.start_task()
+            TASKS.start_stop(taskname)
         self.update(event)
         return event
 
@@ -147,6 +143,8 @@ class MyApp(wx.App):
 if __name__ == "__main__":
     app = MyApp(0)
     app.MainLoop()
+    if not TASKS.saved:
+        pass
 
 
 # TODO add popup error window

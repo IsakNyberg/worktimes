@@ -2,6 +2,7 @@ import wx
 
 THEME_BLUE = [(0xff, 0xff, 0xff), (0x00, 0x7f, 0xc2), (0x00, 0x6c, 0xb2)]
 
+
 class Timer(wx.Timer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
