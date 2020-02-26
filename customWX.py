@@ -31,12 +31,22 @@ class Panel(wx.Panel):
         self.SetSizer(sizer)
 
 
-class SaveMessageDialog(wx.MessageDialog):
+class SaveDialog(wx.MessageDialog):
     def __init__(self, parent):
         message = "Do you want to save the unsaved changes?"
         caption = "Unsaved changes"
-        super().__init__(parent, message, caption, wx.YES_NO)
+        super().__init__(parent, message, caption, wx.YES_NO)  # ^ wx.CANCEL) TODO find out how to use this
         self.SetYesNoLabels('Save', 'Don\'t save')
+
+
+class YesNoDialog(wx.MessageDialog):
+    def __init__(self, parent, message, caption='Yes or No'):
+        super().__init__(parent, message, caption, wx.YES_NO)
+
+
+class OkDialog(wx.MessageDialog):
+    def __init__(self, parent, message, caption='Ok'):
+        super().__init__(parent, message, caption, wx.OK)
 
 
 class ListCtrl(wx.ListCtrl):

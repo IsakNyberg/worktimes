@@ -26,3 +26,4 @@ Hashes.txt
 .github/
 data.txt
 test.py
+*.xml

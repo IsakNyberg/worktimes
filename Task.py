@@ -150,9 +150,9 @@ class TaskList(list):
         with open(self.data_path) as file:  # load tasks
             for line in file:
                 split_line = line.rstrip().split("_")
-                try:
+                if len(split_line) == 3:
                     self.append_task(Task(split_line[0], int(split_line[1]), int(split_line[2])))
-                except IndexError:
+                if len(split_line) == 2:
                     # this is triggered then the save file is in the old format and then the new file is updates
                     self.append_task(Task(split_line[0], int(split_line[1]), 0))
 

@@ -143,10 +143,11 @@ if __name__ == "__main__":
 
     app = MyApp(0)
     app.MainLoop()
+
+    # Save check
     TASKS.stop_all()  # Time between closing the program and answering the popup is not counted
     if not TASKS.saved:
-        save_changes = CWX.SaveMessageDialog(None)
-        if save_changes.ShowModal() == wx.ID_YES:
+        save_changes = CWX.SaveDialog(None)
+        result = save_changes.ShowModal()
+        if result == wx.ID_YES:
             TASKS.save()
-
-# TODO add popup error window
