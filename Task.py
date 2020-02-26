@@ -32,14 +32,14 @@ class TaskList(list):
 
     def rename_task(self, old_name, new_name):
         if self.in_task_list(new_name):
-            raise ValueError("Rename error. Already task with name {0}".format(new_name))
+            raise ValueError("Rename error. Already task with name {0}.".format(new_name))
 
         self.get_task(old_name).name = new_name
         self.saved = False
 
     def append_new_task(self, name):
         if self.get_task(name):
-            raise ValueError("Already task with name {0}".format(name))
+            raise ValueError("Already task with name {0}.".format(name))
         self.append(Task(name))
         self.saved = False
 
@@ -58,7 +58,7 @@ class TaskList(list):
     def remove_task(self, taskname):
         task = self.get_task(taskname)
         if task.ongoing:
-            raise ValueError("An ongoing task cannot be removed")
+            raise ValueError("An ongoing task cannot be removed.")
         self.remove(task)
         self.saved = False
 

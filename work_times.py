@@ -86,19 +86,37 @@ class App(wx.Dialog):
 
     def remove(self, event):
         tasknames = []
-        tasknames += self.ongoing_list.get_selected_tasks()
         tasknames += self.paused_list.get_selected_tasks()
-        for taskname in tasknames:
-            TASKS.remove_task(taskname)
+        tasknames += self.ongoing_list.get_selected_tasks()
+        if len(tasknames) == 0:
+            return event
+
+        confirm = CWX.ConfirmationDialog(self, "remove {0}".format(", ".join(tasknames)))
+        confirmation = confirm.ShowModal()
+
+        if confirmation == wx.ID_YES:
+            for taskname in tasknames:
+                try:
+                    TASKS.remove_task(taskname)
+                except ValueError as e:
+                    CWX.ErrorDialog(self, str(e)).ShowModal()
+
         self.update(event)
+
         return event
 
     def add_task(self, event):
         taskname = self.entry_1.GetValue()
         if taskname == "":
             return event
-        self.entry_1.SetValue("")
-        TASKS.append_new_task(taskname)
+
+        self.entry_1.SetValue("")  # clear the entry field
+
+        try:
+            TASKS.append_new_task(taskname)
+        except ValueError as e:
+            CWX.ErrorDialog(self, str(e)).ShowModal()
+
         self.update(event)
         return event
 

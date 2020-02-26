@@ -1,5 +1,6 @@
 import wx
 
+# For when wx allows you to change header colour
 THEME_BLUE = [(0xff, 0xff, 0xff), (0x00, 0x7f, 0xc2), (0x00, 0x6c, 0xb2)]
 
 
@@ -37,6 +38,19 @@ class SaveDialog(wx.MessageDialog):
         caption = "Unsaved changes"
         super().__init__(parent, message, caption, wx.YES_NO)  # ^ wx.CANCEL) TODO find out how to use this
         self.SetYesNoLabels('Save', 'Don\'t save')
+
+
+class ConfirmationDialog(wx.MessageDialog):
+    def __init__(self, parent, action='do that'):
+        message = "Are you sure you want to {0}?".format(action)
+        caption = "Please Confirm"
+        super().__init__(parent, message, caption, wx.YES_NO ^ wx.CANCEL)
+        self.SetYesNoLabels('Yes', 'No')
+
+
+class ErrorDialog(wx.MessageDialog):
+    def __init__(self, parent, message, caption='Error'):
+        super().__init__(parent, message, caption, wx.OK)
 
 
 class YesNoDialog(wx.MessageDialog):
@@ -94,14 +108,14 @@ class ListCtrl(wx.ListCtrl):
             tasknames.append(self.GetItem(itemIdx=row, col=0).GetText())
         return tasknames
 
-    def apply_theme(self, theme):
+    def _apply_theme(self, theme):
         # TODO
         text = wx.Colour(*theme[0])
         background = wx.Colour(*theme[1])
         self.SetTextColour(text)
         self.SetBackgroundColour(background)
 
-        # im not sure why the lines below don't work
+        # These will work in the future (hopefully)
         # self.SetHeaderAttr(wx.ItemAttr(text, background))
         # self.SetAlternateRowColour(wx.Colour(*theme[2]))
         # self.EnableAlternateRowColours()
