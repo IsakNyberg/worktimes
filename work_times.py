@@ -5,9 +5,6 @@ import wx
 import customWX as CWX
 import Task
 
-TASKS = Task.TaskList()
-TASKS.import_tasks()
-
 
 class App(wx.Dialog):
     def __init__(self, *args, **kwargs):
@@ -141,10 +138,15 @@ class MyApp(wx.App):
 
 
 if __name__ == "__main__":
+    TASKS = Task.TaskList()
+    TASKS.import_tasks()
+
     app = MyApp(0)
     app.MainLoop()
+    TASKS.stop_all()  # Time between closing the program and answering the popup is not counted
     if not TASKS.saved:
-        pass
-
+        save_changes = CWX.SaveMessageDialog(None)
+        if save_changes.ShowModal() == wx.ID_YES:
+            TASKS.save()
 
 # TODO add popup error window

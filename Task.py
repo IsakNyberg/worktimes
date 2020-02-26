@@ -86,7 +86,7 @@ class TaskList(list):
         """
         :return: boolean if there is at least 1 task that is ongoing.
         """
-        return any(task.is_ongoing() for task in self.tasks)
+        return any(task.ongoing for task in self)
 
     def in_task_list(self, task_name: str) -> bool:
         """
@@ -94,7 +94,7 @@ class TaskList(list):
         :param task_name: String, name of a task
         :return: boolean whether there is a task with that name in the TaskList
         """
-        return any(task.get_name() == task_name for task in self.tasks)
+        return any(task.get_name() == task_name for task in self)
 
     def get_task(self, task_name: str):
         """
@@ -112,7 +112,7 @@ class TaskList(list):
         gets sum of the total time of all tasks
         :return: int total time
         """
-        return sum([task.get_total for task in self.tasks])
+        return sum([task.get_total for task in self])
 
     def new_session(self):
         """
@@ -120,8 +120,12 @@ class TaskList(list):
         :return: None
         """
         self.saved = False
-        for task in self.tasks:
+        for task in self:
             task.new_session()
+
+    def stop_all(self):
+        for task in self:
+            task.stop_task()
 
     def save(self):
         """
@@ -129,6 +133,8 @@ class TaskList(list):
         name_session_total
         :return: None
         """
+        self.update()
+
         open(self.data_path, 'w').close()  # delete old file
         write = ""
         for task in self:  # makes one massive string following the save format
@@ -136,6 +142,9 @@ class TaskList(list):
         with open(self.data_path, "a") as saveFile:  # recreate new file
             saveFile.write(write)  # puts massive string in file
         self.last_save = time.time()
+
+        if not self.is_ongoing():
+            self.saved = True
 
     def import_tasks(self):
         with open(self.data_path) as file:  # load tasks
@@ -171,6 +180,10 @@ class Task:
         self.session = 0
 
     def update(self):
+        """
+        Stops and restarts if task is ongoing so that the total time is updated.
+        :arg
+        """
         if self.ongoing:
             self.stop_task()
             self.start_task()

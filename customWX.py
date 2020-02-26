@@ -10,7 +10,7 @@ class Timer(wx.Timer):
 
 class TextCtrl(wx.TextCtrl):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, size=(200, -1))
 
 
 class Button(wx.Button):
@@ -31,9 +31,17 @@ class Panel(wx.Panel):
         self.SetSizer(sizer)
 
 
+class SaveMessageDialog(wx.MessageDialog):
+    def __init__(self, parent):
+        message = "Do you want to save the unsaved changes?"
+        caption = "Unsaved changes"
+        super().__init__(parent, message, caption, wx.YES_NO)
+        self.SetYesNoLabels('Save', 'Don\'t save')
+
+
 class ListCtrl(wx.ListCtrl):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)  # important to include style=wx.LC_REPORT
+        super().__init__(*args, **kwargs)
 
         self.AppendColumn('Name', wx.LIST_FORMAT_LEFT, 200)
         self.AppendColumn('Session', wx.LIST_FORMAT_RIGHT, 50)
