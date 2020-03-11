@@ -91,7 +91,7 @@ class App(wx.Dialog):
         if len(tasknames) == 0:
             return event
 
-        confirm = CWX.ConfirmationDialog(self, "remove {0}".format(", ".join(tasknames)))
+        confirm = CWX.ConfirmationDialog(self, 'remove {0}'.format(', '.join(tasknames)))
         confirmation = confirm.ShowModal()
 
         if confirmation == wx.ID_YES:
@@ -110,7 +110,7 @@ class App(wx.Dialog):
         if taskname == "":
             return event
 
-        self.entry_1.SetValue("")  # clear the entry field
+        self.entry_1.SetValue('')  # clear the entry field
 
         try:
             TASKS.append_new_task(taskname)
